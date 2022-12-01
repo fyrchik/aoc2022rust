@@ -1,0 +1,81 @@
+#!/bin/sh
+
+set -euo pipefail
+
+die() {
+    echo "Error: $*"
+    exit 1
+}
+
+[ -n "$1" ] || die "day number must be provided."
+
+declare -i day="$1"
+outdir=day$(printf "%02d" $day)
+
+cargo init --lib --edition 2021 "$outdir"
+
+cat <<LIB_TEMPLATE >"$outdir"/src/lib.rs
+pub fn part1(input: &str) -> u32 {
+    0
+}
+
+pub fn part2(input: &str) -> u32 {
+    0
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::*;
+
+    #[test]
+    fn example() {
+        let input = "";
+
+        assert_eq!(0, part1(&input));
+        assert_eq!(0, part2(&input));
+    }
+}
+LIB_TEMPLATE
+
+cat <<MAIN_TEMPLATE >"$outdir/src/main.rs"
+use $outdir::*;
+
+fn main() {
+    let input = include_str!("../input");
+    println!("Part 1: {}", part1(input));
+    println!("Part 2: {}", part2(input));
+}
+MAIN_TEMPLATE
+
+mkdir "$outdir/benches/"
+cat <<BENCH_TEMPLATE >"$outdir/benches/bench.rs"
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use $outdir::{part1, part2};
+
+pub fn part1_bench(c: &mut Criterion) {
+    let input = include_str!("../input");
+    c.bench_function("part 1", |b| b.iter(|| part1(black_box(input))));
+}
+
+pub fn part2_bench(c: &mut Criterion) {
+    let input = include_str!("../input");
+    c.bench_function("part 2", |b| b.iter(|| part2(black_box(input))));
+}
+
+criterion_group!(benches, part1_bench, part2_bench);
+criterion_main!(benches);
+BENCH_TEMPLATE
+
+cat <<CARGO_TOML >>"$outdir/Cargo.toml"
+
+[lib]
+path = "src/lib.rs"
+
+[dev-dependencies]
+criterion = "0.4.0"
+
+[[bench]]
+name = "main"
+path = "benches/bench.rs"
+harness = false
+CARGO_TOML
