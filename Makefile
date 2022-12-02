@@ -13,3 +13,7 @@ test/%:
 run/%:
 	@echo "Run $*"
 	@cd $* && cargo +nightly run $(CARGO_OPTS)
+
+fmt/%:
+	@echo "Format $*"
+	@cd $* && cargo +nightly fmt $(CARGO_OPTS)
