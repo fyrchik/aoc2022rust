@@ -1,21 +1,33 @@
-pub fn part1(input: &str) -> u32 {
-    input.lines().fold(0, |sum, s| {
-        let b = s.as_bytes();
-        let mine = b[2] as u32 - 'X' as u32;
-        let opponent = b[0] as u32 - 'A' as u32;
+#![feature(iter_array_chunks)]
 
-        sum + mine + 1 + (mine + 4 - opponent) % 3 * 3
-    })
+pub fn part1(input: &str) -> u32 {
+    input
+        .as_bytes()
+        .iter()
+        .chain(std::iter::once(&0)) // Make it ok not to have trailing newline.
+        .array_chunks::<4>()
+        .fold(0, |sum, b| {
+            let mine = *b[2] as u32 - 'X' as u32;
+            let opponent = *b[0] as u32 - 'A' as u32;
+            let result = (mine + 4 - opponent) % 3;
+
+            sum + mine + 1 + result * 3
+        })
 }
 
 pub fn part2(input: &str) -> u32 {
-    input.lines().fold(0, |sum, s| {
-        let b = s.as_bytes();
-        let result = b[2] as u32 - 'X' as u32;
-        let opponent = b[0] as u32 - 'A' as u32;
+    input
+        .as_bytes()
+        .iter()
+        .chain(std::iter::once(&0)) // Make it ok not to have trailing newline.
+        .array_chunks::<4>()
+        .fold(0, |sum, b| {
+            let result = *b[2] as u32 - 'X' as u32;
+            let opponent = *b[0] as u32 - 'A' as u32;
+            let mine = (opponent + result + 2) % 3;
 
-        sum + result * 3 + 1 + (opponent + result + 2) % 3
-    })
+            sum + mine + 1 + result * 3
+        })
 }
 
 #[cfg(test)]
