@@ -79,3 +79,8 @@ name = "main"
 path = "benches/bench.rs"
 harness = false
 CARGO_TOML
+
+cat <<TOOLCHAIN_TOML >>"$outdir/rust-toolchain.toml"
+[toolchain]
+channel = "nightly"
+TOOLCHAIN_TOML
