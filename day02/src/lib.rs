@@ -6,13 +6,14 @@ pub fn part1(input: &str) -> u32 {
         .iter()
         .chain(std::iter::once(&0)) // Make it ok not to have trailing newline.
         .array_chunks::<4>()
-        .fold(0, |sum, b| {
-            let mine = *b[2] as u32 - 'X' as u32;
-            let opponent = *b[0] as u32 - 'A' as u32;
+        .map(|b| {
+            let mine = *b[2] - b'X';
+            let opponent = *b[0] - b'A';
             let result = (mine + 4 - opponent) % 3;
 
-            sum + mine + 1 + result * 3
+            (mine + 1 + result * 3) as u32
         })
+        .sum()
 }
 
 pub fn part2(input: &str) -> u32 {
@@ -21,13 +22,14 @@ pub fn part2(input: &str) -> u32 {
         .iter()
         .chain(std::iter::once(&0)) // Make it ok not to have trailing newline.
         .array_chunks::<4>()
-        .fold(0, |sum, b| {
-            let result = *b[2] as u32 - 'X' as u32;
-            let opponent = *b[0] as u32 - 'A' as u32;
+        .map(|b| {
+            let result = *b[2] - b'X';
+            let opponent = *b[0] - b'A';
             let mine = (opponent + result + 2) % 3;
 
-            sum + mine + 1 + result * 3
+            (mine + 1 + result * 3) as u32
         })
+        .sum()
 }
 
 #[cfg(test)]
