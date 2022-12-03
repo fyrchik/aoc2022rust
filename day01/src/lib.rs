@@ -1,24 +1,40 @@
 pub fn part1(input: &str) -> u32 {
-    let r = input
-        .lines()
-        .map(|s| s.parse::<u32>().ok())
-        .fold((0, 0), |(max, curr), s| match s {
-            None => (curr.max(max), 0),
-            Some(x) => (max, curr + x),
-        });
-    r.0.max(r.1)
+    input
+        .as_bytes()
+        .iter()
+        .chain(&[b'\n'; 2]) // Avoid having custom logic for the last group.
+        .fold((0, 0, 0), |(max, sum, curr), b| {
+            if *b == b'\n' {
+                if curr == 0 {
+                    (max.max(sum), 0, 0)
+                } else {
+                    (max, sum + curr, 0)
+                }
+            } else {
+                (max, sum, curr * 10 + (*b - b'0') as u32)
+            }
+        })
+        .0
 }
 
 pub fn part2(input: &str) -> u32 {
-    let r = input
-        .lines()
-        .map(|s| s.parse::<u32>().ok())
-        .fold(((0, 0, 0), 0), |(top3, curr), s| match s {
-            None => (insert_max(top3, curr), 0),
-            Some(x) => (top3, curr + x),
-        });
-    let x = insert_max(r.0, r.1);
-    x.0 + x.1 + x.2
+    let s = input
+        .as_bytes()
+        .iter()
+        .chain(&[b'\n'; 2]) // Avoid having custom logic for the last group.
+        .fold(((0, 0, 0), 0, 0), |(top3, sum, curr), b| {
+            if *b == b'\n' {
+                if curr == 0 {
+                    (insert_max(top3, sum), 0, 0)
+                } else {
+                    (top3, sum + curr, 0)
+                }
+            } else {
+                (top3, sum, curr * 10 + (*b - b'0') as u32)
+            }
+        })
+        .0;
+    s.0 + s.1 + s.2
 }
 
 fn insert_max(top3: (u32, u32, u32), e: u32) -> (u32, u32, u32) {
@@ -42,16 +58,16 @@ mod tests {
         let input = "1000
 2000
 3000
-        
+
 4000
-        
+
 5000
 6000
-        
+
 7000
 8000
 9000
-        
+
 10000";
 
         assert_eq!(24000, part1(&input));
