@@ -1,35 +1,31 @@
+#![feature(iter_array_chunks)]
+
 pub fn part1(input: &str) -> u32 {
     input
-        .lines()
-        .map(|s| {
-            let (s1, s2) = s.split_once(',').unwrap();
-            let (a1s, b1s) = s1.split_once('-').unwrap();
-            let (a2s, b2s) = s2.split_once('-').unwrap();
-            let a1 = a1s.parse::<u32>().unwrap();
-            let b1 = b1s.parse::<u32>().unwrap();
-            let a2 = a2s.parse::<u32>().unwrap();
-            let b2 = b2s.parse::<u32>().unwrap();
-
-            (a1 <= a2 && b2 <= b1 || a2 <= a1 && b1 <= b2) as u32
-        })
+        .as_bytes()
+        .split(|c| matches!(c, b'-' | b',' | b'\n'))
+        .map(int_from_bytes::<u8>)
+        .array_chunks::<4>()
+        .map(|[a1, b1, a2, b2]| (a1 <= a2 && b2 <= b1 || a2 <= a1 && b1 <= b2) as u32)
         .sum()
 }
 
 pub fn part2(input: &str) -> u32 {
     input
-        .lines()
-        .map(|s| {
-            let (s1, s2) = s.split_once(',').unwrap();
-            let (a1s, b1s) = s1.split_once('-').unwrap();
-            let (a2s, b2s) = s2.split_once('-').unwrap();
-            let a1 = a1s.parse::<u32>().unwrap();
-            let b1 = b1s.parse::<u32>().unwrap();
-            let a2 = a2s.parse::<u32>().unwrap();
-            let b2 = b2s.parse::<u32>().unwrap();
-
-            (a1 <= b2 && a2 <= b1) as u32
-        })
+        .as_bytes()
+        .split(|c| matches!(c, b'-' | b',' | b'\n'))
+        .map(int_from_bytes::<u8>)
+        .array_chunks::<4>()
+        .map(|[a1, b1, a2, b2]| (a1 <= b2 && a2 <= b1) as u32)
         .sum()
+}
+
+fn int_from_bytes<T>(s: &[u8]) -> T
+where
+    T: std::ops::Mul<T, Output = T> + std::ops::Add<T, Output = T> + From<u8>,
+{
+    s.iter()
+        .fold(T::from(0), |n, &c| n * T::from(10) + T::from(c - b'0'))
 }
 
 #[cfg(test)]
