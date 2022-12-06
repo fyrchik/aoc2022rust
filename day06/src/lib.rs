@@ -6,27 +6,46 @@ pub fn part1(input: &str) -> u32 {
         .array_windows::<4>()
         .enumerate()
         .find(|&(_, w)| {
-            let mask = (1u32 << (w[0] - b'a'))
-                | (1u32 << (w[1] - b'a'))
-                | (1u32 << (w[2] - b'a'))
-                | (1u32 << (w[3] - b'a'));
-            mask.count_ones() == 4
+            w[0] != w[1]
+                && w[0] != w[2]
+                && w[0] != w[3]
+                && w[1] != w[2]
+                && w[1] != w[3]
+                && w[2] != w[3]
         });
     res.unwrap().0 as u32 + 4
 }
 
 pub fn part2(input: &str) -> u32 {
-    let res = input
-        .as_bytes()
-        .array_windows::<14>()
-        .enumerate()
-        .find(|&(_, w)| {
-            w.iter()
-                .fold(0, |acc, e| acc | (1u32 << (e - b'a')))
-                .count_ones() as usize
-                == w.len()
-        });
-    res.unwrap().0 as u32 + 14
+    let b = input.as_bytes();
+
+    let mut counts = [0; 0x20];
+    let mut total = 0u32; // Amount of different letters in a window.
+    for i in 0..14.min(b.len()) {
+        let index = b[i] as usize & 0x1F;
+        counts[index] += 1;
+        total += (counts[index] == 1) as u32;
+    }
+
+    if total == 14 {
+        return 15;
+    }
+
+    for i in 14..b.len() {
+        let prev = b[i - 14] as usize & 0x1F;
+        let next = b[i] as usize & 0x1F;
+
+        counts[prev] -= 1;
+        total -= (counts[prev] == 0) as u32;
+
+        counts[next] += 1;
+        total += (counts[next] == 1) as u32;
+
+        if total == 14 {
+            return i as u32 + 1;
+        }
+    }
+    return u32::MAX;
 }
 
 #[cfg(test)]
