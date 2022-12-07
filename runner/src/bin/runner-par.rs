@@ -7,8 +7,6 @@ fn main() {
 
     let jobs = runner::jobs();
     let timer = Timer::new();
-    (0..jobs.len()).into_par_iter().for_each(|i| {
-        println!("{}: {}", jobs[i].1, jobs[i].0(jobs[i].2));
-    });
+    (0..jobs.len()).into_par_iter().for_each(|i| jobs[i].0());
     timer.took().describe("everything");
 }

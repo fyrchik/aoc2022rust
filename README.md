@@ -31,14 +31,17 @@ are close to those obtained (scientifically) with `cargo criterion`.
 |                                                | part A                              | part B                              |
 |:-----------------------------------------------|:------------------------------------|:------------------------------------|
 | [day 1](https://adventofcode.com/2022/day/1)   | [` 0.011 ms`](./day01/src/lib.rs) | [` 0.012 ms`](./day01/src/lib.rs) |
-| [day 2](https://adventofcode.com/2022/day/2)   | [` 0.006 ms`](./day02/src/lib.rs) | [` 0.005 ms`](./day02/src/lib.rs) |
+| [day 2](https://adventofcode.com/2022/day/2)   | [` 0.012 ms`](./day02/src/lib.rs) | [` 0.012 ms`](./day02/src/lib.rs) |
 | [day 3](https://adventofcode.com/2022/day/3)   | [` 0.011 ms`](./day03/src/lib.rs) | [` 0.010 ms`](./day03/src/lib.rs) |
 | [day 4](https://adventofcode.com/2022/day/4)   | [` 0.020 ms`](./day04/src/lib.rs) | [` 0.020 ms`](./day04/src/lib.rs) |
+| [day 5](https://adventofcode.com/2022/day/5)   | [` 0.024 ms`](./day05/src/lib.rs) | [` 0.024 ms`](./day05/src/lib.rs) |
+| [day 6](https://adventofcode.com/2022/day/6)   | [` 0.004 ms`](./day06/src/lib.rs) | [` 0.007 ms`](./day06/src/lib.rs) |
+| [day 7](https://adventofcode.com/2022/day/7)   | [` 0.018 ms`](./day07/src/lib.rs) | [` 0.018 ms`](./day07/src/lib.rs) |
 
 
 |              | one-by-one (1 CPU core)                  | parallel                                     |
 |:-------------|:-----------------------------------------|:---------------------------------------------|
-| _everything_ | [`0.143 ms`](./runner/src/bin/runner.rs) | [`0.140 ms`](./runner/src/bin/runner-par.rs) |
+| _everything_ | [`0.300 ms`](./runner/src/bin/runner.rs) | [`0.211 ms`](./runner/src/bin/runner-par.rs) |
 
 ## Run all solutions
 

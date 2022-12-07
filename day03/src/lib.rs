@@ -50,6 +50,14 @@ fn fake_to_real(p: u8) -> u8 {
     (1 - ((p >> 5) & 1)) * 26 + (p & 0x1F)
 }
 
+pub fn run_part1() {
+    println!("{}", part1(include_str!("../input")));
+}
+
+pub fn run_part2() {
+    println!("{}", part2(include_str!("../input")));
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;

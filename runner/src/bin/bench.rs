@@ -13,7 +13,7 @@ fn main() {
                 (0..RUNS)
                     .map(|_| {
                         let took = Timer::new();
-                        j.0(j.2);
+                        j.0();
                         took.took().into_std()
                     })
                     .min()

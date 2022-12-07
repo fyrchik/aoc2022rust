@@ -28,6 +28,14 @@ where
         .fold(T::from(0), |n, &c| n * T::from(10) + T::from(c - b'0'))
 }
 
+pub fn run_part1() {
+    println!("{}", part1(include_str!("../input")));
+}
+
+pub fn run_part2() {
+    println!("{}", part2(include_str!("../input")));
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;

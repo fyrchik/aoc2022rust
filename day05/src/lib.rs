@@ -112,6 +112,14 @@ where
     })
 }
 
+pub fn run_part1() {
+    println!("{}", part1(include_str!("../input")));
+}
+
+pub fn run_part2() {
+    println!("{}", part2(include_str!("../input")));
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;
