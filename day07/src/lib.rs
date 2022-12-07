@@ -26,8 +26,7 @@ pub fn part1(input: &str) -> u32 {
                 tree.len() - 1
             }
         } else if b[0] != b'$' && b[0] != b'd' {
-            let i = b.iter().enumerate().find(|p| *p.1 == b' ').unwrap().0;
-            let sz = int_from_bytes::<u32>(&b[..i]);
+            let sz = int_from_bytes_prefix::<u32>(b);
             tree[current].size += sz;
         }
     });
@@ -62,8 +61,7 @@ pub fn part2(input: &str) -> u32 {
                 tree.len() - 1
             }
         } else if b[0] != b'$' && b[0] != b'd' {
-            let i = b.iter().enumerate().find(|p| *p.1 == b' ').unwrap().0;
-            let sz = int_from_bytes::<u32>(&b[..i]);
+            let sz = int_from_bytes_prefix::<u32>(b);
             tree[current].size += sz;
         }
     });
@@ -89,26 +87,29 @@ pub fn part2(input: &str) -> u32 {
         .unwrap_or(u32::MAX)
 }
 
-fn int_from_bytes<T>(s: &[u8]) -> T
+fn int_from_bytes_prefix<T>(s: &[u8]) -> T
 where
-    T: From<u8> + std::ops::Mul<T, Output = T> + std::ops::Add<T, Output = T>,
+    T: From<u8> + std::ops::MulAssign + std::ops::AddAssign,
 {
-    s.iter().fold(T::from(0), |n, c| {
+    let mut n = T::from(0);
+    for &c in s {
         let r = match c {
-            b'0' => Some(T::from(0)),
-            b'1' => Some(T::from(1)),
-            b'2' => Some(T::from(2)),
-            b'3' => Some(T::from(3)),
-            b'4' => Some(T::from(4)),
-            b'5' => Some(T::from(5)),
-            b'6' => Some(T::from(6)),
-            b'7' => Some(T::from(7)),
-            b'8' => Some(T::from(8)),
-            b'9' => Some(T::from(9)),
-            _ => None,
+            b'0' => 0,
+            b'1' => 1,
+            b'2' => 2,
+            b'3' => 3,
+            b'4' => 4,
+            b'5' => 5,
+            b'6' => 6,
+            b'7' => 7,
+            b'8' => 8,
+            b'9' => 9,
+            _ => return n,
         };
-        n * T::from(10) + r.unwrap()
-    })
+        n *= T::from(10);
+        n += T::from(r);
+    }
+    n
 }
 
 #[cfg(test)]
