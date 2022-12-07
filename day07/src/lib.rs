@@ -1,139 +1,114 @@
-use std::collections::HashMap;
+#![feature(extend_one)]
 
-enum Data {
-    Dir(Vec<String>),
-    File(u32),
+/// Pair represents a directory in a tree. Parent always points to a previously seen element.
+/// In both parts we assume that each directory is visited (`ls`) only once.
+struct Pair {
+    parent: usize,
+    size: u32,
 }
 
 pub fn part1(input: &str) -> u32 {
-    let mut sizes = HashMap::<String, u32>::new();
-    let mut dir = HashMap::<String, Data>::new();
-    let mut current: Vec<String> = vec![];
-    input.lines().for_each(|s| {
-        let b = s.as_bytes();
-        match b[0] {
-            b'$' => {
-                if b[2..4].eq(b"cd") {
-                    if b[5..].eq(b"..") {
-                        _ = current.pop()
-                    } else {
-                        current.push(s[5..].to_string())
-                    }
-                }
+    let mut tree: Vec<Pair> = vec![Pair { parent: 0, size: 0 }];
+    let mut current = 0;
+
+    input.as_bytes().split(|&c| c == b'\n').for_each(|b| {
+        if b.is_empty() {
+            return;
+        }
+        if b[0] == b'$' && b[2] == b'c' {
+            current = if b[5] == b'.' {
+                tree[current].parent
+            } else {
+                tree.push(Pair {
+                    parent: current,
+                    size: 0,
+                });
+                tree.len() - 1
             }
-            _ => {
-                let cur = current.join("/");
-                let (size, name) = s.split_once(' ').unwrap();
-                if size == "dir" {
-                    dir.entry(cur)
-                        .and_modify(|e| {
-                            if let Data::Dir(v) = e {
-                                v.push(name.to_string())
-                            }
-                        })
-                        .or_insert(Data::Dir(vec![name.to_string()]));
-                } else {
-                    let sz = size.parse::<u32>().unwrap();
-                    for i in 0..current.len() {
-                        let name = current[0..i].join("/");
-                        sizes.entry(name).and_modify(|s| *s += sz).or_insert(sz);
-                    }
-                }
-            }
+        } else if b[0] != b'$' && b[0] != b'd' {
+            let i = b.iter().enumerate().find(|p| *p.1 == b' ').unwrap().0;
+            let sz = int_from_bytes::<u32>(&b[..i]);
+            tree[current].size += sz;
         }
     });
 
-    let mut sizes = HashMap::<String, u32>::new();
-    for (k, v) in dir {
-        match v {
-            Data::File(s) => {
-                for i in k.as_bytes().iter().enumerate().filter(|(_, &c)| c == b'/') {
-                    sizes
-                        .entry(k.as_str()[0..i.0].to_string())
-                        .and_modify(|sz| *sz += s)
-                        .or_insert(s);
-                }
-            }
-            _ => {}
-        }
+    for i in (1..tree.len()).rev() {
+        let parent = tree[i].parent;
+        tree[parent].size += tree[i].size;
     }
 
-    let mut total = 0u32;
-    for &s in sizes.values() {
-        if s <= 100_000 {
-            total += s;
-        }
-    }
-
-    total
+    tree.iter()
+        .map(|p| p.size)
+        .filter(|&size| size <= 100_000)
+        .sum()
 }
 
 pub fn part2(input: &str) -> u32 {
-    let mut dir = HashMap::<String, Data>::new();
-    let mut current: Vec<String> = vec![];
-    input.lines().for_each(|s| {
-        let b = s.as_bytes();
-        match b[0] {
-            b'$' => {
-                if b[2..4].eq("cd".as_bytes()) {
-                    if b[5..].eq("..".as_bytes()) {
-                        _ = current.pop()
-                    } else {
-                        current.push(s[5..].to_string())
-                    }
-                }
+    let mut tree: Vec<Pair> = vec![Pair { parent: 0, size: 0 }];
+    let mut current = 0;
+
+    input.as_bytes().split(|&c| c == b'\n').for_each(|b| {
+        if b.is_empty() {
+            return;
+        }
+        if b[0] == b'$' && b[2] == b'c' {
+            current = if b[5] == b'.' {
+                tree[current].parent
+            } else {
+                tree.push(Pair {
+                    parent: current,
+                    size: 0,
+                });
+                tree.len() - 1
             }
-            _ => {
-                let cur = current.join("/");
-                let (size, name) = s.split_once(' ').unwrap();
-                if size == "dir" {
-                    dir.entry(cur)
-                        .and_modify(|e| {
-                            if let Data::Dir(v) = e {
-                                v.push(name.to_string())
-                            }
-                        })
-                        .or_insert(Data::Dir(vec![name.to_string()]));
-                } else {
-                    let sz = size.parse::<u32>().unwrap();
-                    dir.insert(cur + "/" + name, Data::File(sz));
-                }
-            }
+        } else if b[0] != b'$' && b[0] != b'd' {
+            let i = b.iter().enumerate().find(|p| *p.1 == b' ').unwrap().0;
+            let sz = int_from_bytes::<u32>(&b[..i]);
+            tree[current].size += sz;
         }
     });
 
-    let mut sizes = HashMap::<String, u32>::new();
-    for (k, v) in dir {
-        match v {
-            Data::File(s) => {
-                for i in k.as_bytes().iter().enumerate().filter(|(_, &c)| c == b'/') {
-                    sizes
-                        .entry(k.as_str()[0..i.0].to_string())
-                        .and_modify(|sz| *sz += s)
-                        .or_insert(s);
-                }
-            }
-            _ => {}
-        }
+    for i in (1..tree.len()).rev() {
+        let parent = tree[i].parent;
+        tree[parent].size += tree[i].size;
     }
 
     let available = 70000000;
     let need = 30000000;
-    let used = sizes.get("").unwrap();
+    let used = tree[0].size;
     let free = available - used;
     if need <= free {
         return 0;
     }
 
     let min_remove = need - free;
-    let mut min_size = u32::MAX;
-    for (_, s) in sizes {
-        if min_remove < s && s < min_size {
-            min_size = s;
-        }
-    }
+    tree.iter()
+        .map(|p| p.size)
+        .filter(|&size| min_remove <= size)
+        .min()
+        .unwrap_or(u32::MAX)
+}
 
-    min_size
+fn int_from_bytes<T>(s: &[u8]) -> T
+where
+    T: From<u8> + std::ops::Mul<T, Output = T> + std::ops::Add<T, Output = T>,
+{
+    s.iter().fold(T::from(0), |n, c| {
+        let r = match c {
+            b'0' => Some(T::from(0)),
+            b'1' => Some(T::from(1)),
+            b'2' => Some(T::from(2)),
+            b'3' => Some(T::from(3)),
+            b'4' => Some(T::from(4)),
+            b'5' => Some(T::from(5)),
+            b'6' => Some(T::from(6)),
+            b'7' => Some(T::from(7)),
+            b'8' => Some(T::from(8)),
+            b'9' => Some(T::from(9)),
+            _ => None,
+        };
+        n * T::from(10) + r.unwrap()
+    })
 }
 
 #[cfg(test)]
@@ -166,7 +141,7 @@ $ ls
 5626152 d.ext
 7214296 k";
 
-        assert_eq!(95437, part1(&input));
-        assert_eq!(24933642, part2(&input));
+        assert_eq!(95437, part1(input));
+        assert_eq!(24933642, part2(input));
     }
 }
