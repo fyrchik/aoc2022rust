@@ -1,7 +1,9 @@
+#![feature(array_chunks)]
+
 pub fn part1(input: &str) -> u32 {
-    let mut field: Vec<Vec<(i8, bool)>> = input
+    let mut field: Vec<Vec<i8>> = input
         .lines()
-        .map(|s| s.as_bytes().iter().map(|c| (*c as i8, false)).collect())
+        .map(|s| s.as_bytes().iter().map(|c| *c as i8).collect())
         .collect();
 
     let mut count = 0;
@@ -9,20 +11,22 @@ pub fn part1(input: &str) -> u32 {
         let mut left_max = -1i8;
         let mut left_index = 0;
         for (j, t) in row.iter_mut().enumerate() {
-            if t.0 > left_max {
-                left_max = t.0;
+            let h = *t & 0xF;
+            if h > left_max {
+                left_max = h;
                 left_index = j;
                 count += 1;
-                t.1 = true;
+                *t |= i8::MIN;
             }
         }
 
         let mut right_max = -1i8;
         for j in (left_index + 1..row.len()).rev() {
-            if row[j].0 > right_max {
-                right_max = row[j].0;
+            let h = row[j] & 0xF;
+            if h > right_max {
+                right_max = h;
                 count += 1;
-                row[j].1 = true;
+                row[j] |= i8::MIN;
             }
         }
     }
@@ -31,25 +35,21 @@ pub fn part1(input: &str) -> u32 {
         let mut up_max = -1i8;
         let mut up_index = 0;
 
-        for (i, row) in field.iter_mut().enumerate() {
-            if row[j].0 > up_max {
-                up_max = row[j].0;
+        for (i, row) in field.iter().enumerate() {
+            let h = row[j] & 0xF;
+            if h > up_max {
+                up_max = h;
                 up_index = i;
-                if !row[j].1 {
-                    count += 1;
-                    row[j].1 = true;
-                }
+                count += (row[j] > 0) as u32;
             }
         }
 
         let mut down_max = -1i8;
-        for i in (up_index + 1..field.len()).rev() {
-            if field[i][j].0 > down_max {
-                down_max = field[i][j].0;
-                if !field[i][j].1 {
-                    count += 1;
-                    field[i][j].1 = true;
-                }
+        for row in field.iter().skip(up_index + 1).rev() {
+            let h = row[j] & 0xF;
+            if h > down_max {
+                down_max = h;
+                count += (row[j] > 0) as u32;
             }
         }
     }
@@ -58,39 +58,35 @@ pub fn part1(input: &str) -> u32 {
 }
 
 pub fn part2(input: &str) -> u32 {
-    let field: Vec<Vec<u8>> = input
-        .lines()
-        .map(|s| s.as_bytes().to_vec())
-        .collect();
+    let field: Vec<&[u8]> = input.lines().map(|s| s.as_bytes()).collect();
 
     let mut max_score = 0;
     for i in 1..field.len() - 1 {
         for j in 1..field[i].len() - 1 {
+            let mid = field[i][j];
             let mut score = 1;
-            for k in (0..j).rev() {
-                if field[i][k] >= field[i][j] || k == 0 {
-                    score *= j - k;
-                    break;
-                }
-            }
-            for k in j + 1..field[i].len() {
-                if field[i][k] >= field[i][j] || k == field[i].len() - 1 {
-                    score *= k - j;
-                    break;
-                }
-            }
-            for k in (0..i).rev() {
-                if field[k][j] >= field[i][j] || k == 0 {
-                    score *= i - k;
-                    break;
-                }
-            }
-            for k in i + 1..field.len() {
-                if field[k][j] >= field[i][j] || k == field.len() - 1 {
-                    score *= k - i;
-                    break;
-                }
-            }
+
+            let k = field[i][0..j]
+                .iter()
+                .rev()
+                .position(|&c| c >= mid)
+                .unwrap_or(0);
+            score *= k + 1;
+
+            let k = field[i][j + 1..]
+                .iter()
+                .position(|&c| c >= mid)
+                .unwrap_or(field[i].len() - 1);
+            score *= k;
+
+            let k = (0..i).rev().position(|k| field[k][j] >= mid).unwrap_or(0);
+            score *= k + 1;
+
+            let k = (i + 1..field.len())
+                .position(|k| field[k][j] >= mid)
+                .unwrap_or(field.len() - 1);
+            score *= k;
+
             if score > max_score {
                 max_score = score;
             }
