@@ -37,11 +37,12 @@ are close to those obtained (scientifically) with `cargo criterion`.
 | [day 5](https://adventofcode.com/2022/day/5)   | [` 0.024 ms`](./day05/src/lib.rs) | [` 0.024 ms`](./day05/src/lib.rs) |
 | [day 6](https://adventofcode.com/2022/day/6)   | [` 0.004 ms`](./day06/src/lib.rs) | [` 0.007 ms`](./day06/src/lib.rs) |
 | [day 7](https://adventofcode.com/2022/day/7)   | [` 0.018 ms`](./day07/src/lib.rs) | [` 0.018 ms`](./day07/src/lib.rs) |
+| [day 8](https://adventofcode.com/2022/day/8)   | [` 0.044 ms`](./day08/src/lib.rs) | [` 0.285 ms`](./day08/src/lib.rs) |
 
 
 |              | one-by-one (1 CPU core)                  | parallel                                     |
 |:-------------|:-----------------------------------------|:---------------------------------------------|
-| _everything_ | [`0.300 ms`](./runner/src/bin/runner.rs) | [`0.211 ms`](./runner/src/bin/runner-par.rs) |
+| _everything_ | [`0.976 ms`](./runner/src/bin/runner.rs) | [`0.657 ms`](./runner/src/bin/runner-par.rs) |
 
 ## Run all solutions
 
