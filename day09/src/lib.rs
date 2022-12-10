@@ -9,54 +9,40 @@ pub fn part1(input: &str) -> u32 {
     // When we change the direction (~20% on real input) often the tail doesn't move.
     // So we remember the last key we have seen and do not try to insert it in the map
     // if it hasn't changed.
-    let mut last_key = 0;
+    let mut last_tail = tail;
     input.as_bytes().split(|&c| c == b'\n').for_each(|b| {
         if b.len() < 3 {
             return;
         }
 
-        let d = match b[0] {
-            b'R' => (1, 0),
-            b'L' => (-1, 0),
-            b'U' => (0, 1),
-            b'D' => (0, -1),
-            _ => (0, 0),
-        };
+        let d0 = (b[0] == b'R') as i32 - (b[0] == b'L') as i32;
+        let d1 = (b[0] == b'U') as i32 - (b[0] == b'D') as i32;
 
         for _ in 0..int_from_bytes::<u8>(&b[2..]) {
-            head = (head.0 + d.0, head.1 + d.1);
+            head = (head.0 + d0, head.1 + d1);
 
-            (head, tail) = move_points(head, tail);
+            let diff = move_points(head.0 - tail.0, head.1 - tail.1);
+            if diff != (0, 0) {
+                tail = (tail.0 + diff.0, tail.1 + diff.1);
 
-            let key = ((tail.0 as i16) << 8) | (tail.1 as i16 & 0xFF);
-            if key != last_key {
+                let key = ((tail.0 as i16) << 8) | (tail.1 as i16 & 0xFF);
                 seen.insert(key);
+                last_tail = tail;
             }
-            last_key = key;
         }
     });
 
     seen.len() as u32
 }
 
-pub fn move_points(head: (i32, i32), tail: (i32, i32)) -> ((i32, i32), (i32, i32)) {
-    let mut h = head;
-    let mut t = tail;
+pub fn move_points(d0: i32, d1: i32) -> (i32, i32) {
+    let h0eq2 = d0 & 0x3 == 2;
+    let h1eq2 = d1 & 0x3 == 2;
 
-    let h0eq2 = h.0 & 0x3 == 2;
-    let h1eq2 = h.1 & 0x3 == 2;
-    t.0 += h.0.signum() * (h0eq2 || h.0 & 0x1 == 1 && h1eq2) as i32;
-    t.1 += h.1.signum() * (h1eq2 || h.1 & 0x1 == 1 && h0eq2) as i32;
-
-    if h0eq2 {
-        h.0 /= 2;
-        h.1 *= h1eq2 as i32;
-    }
-    if h1eq2 {
-        h.1 /= 2;
-        h.0 *= h0eq2 as i32;
-    }
-    (h, t)
+    (
+        d0.signum() * (h0eq2 || d0 & 0x1 == 1 && h1eq2) as i32,
+        d1.signum() * (h1eq2 || d1 & 0x1 == 1 && h0eq2) as i32,
+    )
 }
 
 pub fn part2(input: &str) -> u32 {
@@ -70,32 +56,26 @@ pub fn part2(input: &str) -> u32 {
             return;
         }
 
-        let d = match b[0] {
-            b'R' => (1, 0),
-            b'L' => (-1, 0),
-            b'U' => (0, 1),
-            b'D' => (0, -1),
-            _ => (0, 0),
-        };
+        let d0 = (b[0] == b'R') as i32 - (b[0] == b'L') as i32;
+        let d1 = (b[0] == b'U') as i32 - (b[0] == b'D') as i32;
+
         'outer: for _ in 0..int_from_bytes::<u8>(&b[2..]) {
-            points[0].0 += d.0;
-            points[0].1 += d.1;
+            points[0] = (points[0].0 + d0, points[0].1 + d1);
+
             for i in 1..points.len() {
-                (points[i - 1], points[i]) = move_points(points[i - 1], points[i]);
-                if last[i] == points[i] {
+                let diff =
+                    move_points(points[i - 1].0 - points[i].0, points[i - 1].1 - points[i].1);
+                if diff == (0, 0) {
                     continue 'outer;
                 }
+                points[i] = (points[i].0 + diff.0, points[i].1 + diff.1);
                 last[i - 1] = points[i - 1];
             }
 
             let tail = points[points.len() - 1];
-            if last[last.len() - 1] == tail {
-                continue 'outer;
-            }
-            last[last.len() - 1] = tail;
-
             let key = ((tail.0 as i16) << 8) | (tail.1 as i16 & 0xFF);
             seen.insert(key);
+            last[last.len() - 1] = tail;
         }
     });
     seen.len() as u32
