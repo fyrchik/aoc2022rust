@@ -1,6 +1,6 @@
 #![feature(array_chunks)]
 pub fn part1(input: &str) -> u32 {
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = rustc_hash::FxHashSet::default();
     seen.insert(0);
 
     let mut head = (0i32, 0i32);
@@ -46,7 +46,7 @@ pub fn move_points(d0: i32, d1: i32) -> (i32, i32) {
 }
 
 pub fn part2(input: &str) -> u32 {
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = rustc_hash::FxHashSet::default();
     seen.insert(0);
 
     let mut points = [(0, 0); 10];
