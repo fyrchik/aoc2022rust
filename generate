@@ -76,6 +76,9 @@ BENCH_TEMPLATE
 
 cat <<CARGO_TOML >>"$outdir/Cargo.toml"
 
+[profile.release]
+debug = true
+
 [lib]
 path = "src/lib.rs"
 
