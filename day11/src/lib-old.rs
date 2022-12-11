@@ -1,5 +1,7 @@
 #![feature(iter_array_chunks)]
 
+use std::collections::VecDeque;
+
 #[derive(Debug)]
 enum Operation {
     Mul(u8),
@@ -7,12 +9,8 @@ enum Operation {
     Square,
 }
 
-struct Item {
-    worry_level: u32,
-    monkey_index: u8,
-}
-
 struct Monkey {
+    items: VecDeque<u32>,
     op: Operation,
     test: u8,
     targets: [u8; 2],
@@ -37,22 +35,19 @@ impl Monkey {
 }
 
 pub fn part1(input: &str) -> u32 {
-    let (monkeys, mut items) = parse(input);
+    let mut monkeys = parse(input);
     let mut inspected = vec![0u8; monkeys.len()];
 
     for _ in 0..20 {
-        for (i, m) in monkeys.iter().enumerate() {
-            items
-                .iter_mut()
-                .filter(|it| it.monkey_index as usize == i)
-                .for_each(|it| {
-                    let new_worry = m.inspect(it.worry_level) / 3;
-                    inspected[i] += 1;
+        for i in 0..monkeys.len() {
+            while let Some(it) = monkeys[i].items.pop_front() {
+                let new_worry = monkeys[i].inspect(it) / 3;
+                inspected[i] += 1;
 
-                    let test = (new_worry % m.test as u32 == 0) as usize;
-                    it.worry_level = new_worry;
-                    it.monkey_index = m.targets[test];
-                });
+                let test = new_worry % monkeys[i].test as u32 == 0;
+                let target = monkeys[i].targets[test as usize];
+                monkeys[target as usize].items.push_back(new_worry);
+            }
         }
     }
 
@@ -61,23 +56,20 @@ pub fn part1(input: &str) -> u32 {
 }
 
 pub fn part2(input: &str) -> u64 {
-    let (monkeys, mut items) = parse(input);
+    let mut monkeys = parse(input);
     let mut inspected = vec![0u32; monkeys.len()];
     let modulo: u32 = monkeys.iter().map(|m| m.test as u32).product();
 
     for _ in 0..10_000 {
-        for (i, m) in monkeys.iter().enumerate() {
-            items
-                .iter_mut()
-                .filter(|it| it.monkey_index as usize == i)
-                .for_each(|it| {
-                    let new_worry = m.inspect_big(it.worry_level, modulo);
-                    inspected[i] += 1;
+        for i in 0..monkeys.len() {
+            while let Some(it) = monkeys[i].items.pop_front() {
+                let new_worry = monkeys[i].inspect_big(it, modulo);
+                inspected[i] += 1;
 
-                    let test = (new_worry % m.test as u32 == 0) as usize;
-                    it.worry_level = new_worry;
-                    it.monkey_index = m.targets[test];
-                });
+                let test = new_worry % monkeys[i].test as u32 == 0;
+                let target = monkeys[i].targets[test as usize];
+                monkeys[target as usize].items.push_back(new_worry);
+            }
         }
     }
 
@@ -85,19 +77,17 @@ pub fn part2(input: &str) -> u64 {
     inspected[0] as u64 * inspected[1] as u64
 }
 
-fn parse(input: &str) -> (Vec<Monkey>, Vec<Item>) {
-    let mut items: Vec<Item> = vec![];
-    let monkeys = input
+fn parse(input: &str) -> Vec<Monkey> {
+    input
         .as_bytes()
         .split(|&c| c == b'\n')
         .filter(|b| !b.is_empty())
         .array_chunks::<6>()
-        .enumerate()
-        .map(|(i, ls)| {
-            items.extend(ls[1][18..].split(|&c| c == b',').map(move |b| Item {
-                worry_level: int_from_bytes::<u32>(b),
-                monkey_index: i as u8,
-            }));
+        .map(|ls| {
+            let items: VecDeque<u32> = ls[1][18..]
+                .split(|&c| c == b',')
+                .map(int_from_bytes::<u32>)
+                .collect();
             let raw_op = ls[2][23..]
                 .split(|&c| c == b' ')
                 .array_chunks::<2>()
@@ -120,10 +110,14 @@ fn parse(input: &str) -> (Vec<Monkey>, Vec<Item>) {
                 int_from_bytes::<u8>(&ls[5][30..]),
                 int_from_bytes::<u8>(&ls[4][29..]),
             ];
-            Monkey { op, test, targets }
+            Monkey {
+                items,
+                op,
+                test,
+                targets,
+            }
         })
-        .collect();
-    (monkeys, items)
+        .collect()
 }
 
 fn int_from_bytes<T>(s: &[u8]) -> T
