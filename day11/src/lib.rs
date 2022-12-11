@@ -1,5 +1,7 @@
 #![feature(iter_array_chunks)]
 
+use rayon::prelude::*;
+
 #[derive(Debug)]
 enum Operation {
     Mul(u8),
@@ -61,25 +63,35 @@ pub fn part1(input: &str) -> u32 {
 }
 
 pub fn part2(input: &str) -> u64 {
-    let (monkeys, mut items) = parse(input);
-    let mut inspected = vec![0u32; monkeys.len()];
+    let (monkeys, items) = parse(input);
     let modulo: u32 = monkeys.iter().map(|m| m.test as u32).product();
 
-    for _ in 0..10_000 {
-        for (i, m) in monkeys.iter().enumerate() {
-            items
-                .iter_mut()
-                .filter(|it| it.monkey_index as usize == i)
-                .for_each(|it| {
-                    let new_worry = m.inspect_big(it.worry_level, modulo);
-                    inspected[i] += 1;
+    let mut inspected: Vec<u32> = items
+        .par_iter()
+        .map(|k| {
+            let mut inspected = vec![0u32; monkeys.len()];
+            let mut worry = k.worry_level;
+            let mut index = k.monkey_index as usize;
+            for _ in 0..10_000 {
+                loop {
+                    worry = monkeys[index].inspect_big(worry, modulo);
+                    inspected[index] += 1;
 
-                    let test = (new_worry % m.test as u32 == 0) as usize;
-                    it.worry_level = new_worry;
-                    it.monkey_index = m.targets[test];
-                });
-        }
-    }
+                    let test = (worry % monkeys[index].test as u32 == 0) as usize;
+                    let new_index = monkeys[index].targets[test] as usize;
+                    if new_index <= index {
+                        index = new_index;
+                        break;
+                    }
+                    index = new_index;
+                }
+            }
+            inspected
+        })
+        .reduce(
+            || vec![0u32; monkeys.len()],
+            |x, y| x.iter().zip(y.iter()).map(|(a, b)| a + b).collect(),
+        );
 
     inspected.sort_by(|x, y| y.cmp(x));
     inspected[0] as u64 * inspected[1] as u64
