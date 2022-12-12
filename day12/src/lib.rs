@@ -1,8 +1,10 @@
 use pathfinding::prelude::*;
 
+// Iter represents an iterator over nodes neighbours.
+// It is constant in size and we should perform no allocations when returning it.
 struct Iter {
     v: [usize; 4],
-    n: u8,
+    n: usize,
 }
 
 impl Iterator for Iter {
@@ -11,7 +13,8 @@ impl Iterator for Iter {
         if self.n == 4 {
             return None;
         }
-        let item = self.v[(self.n as usize) & 0x3];
+        // I didn't check `& 0x3` part, but this way we _could_ omit bound checks in theory.
+        let item = self.v[self.n & 0x3];
         self.n += 1;
         Some(item)
     }
@@ -33,10 +36,10 @@ pub fn part1(input: &str) -> u32 {
     let width = g.iter().position(|&c| c == b'\n').unwrap() + 1;
     let mut start = 0;
     let mut target = 0;
-    for i in 0..g.len() {
-        if g[i] == b'S' {
+    for (i, &c) in g.iter().enumerate() {
+        if c == b'S' {
             start = i;
-        } else if g[i] == b'E' {
+        } else if c == b'E' {
             target = i;
         }
     }
@@ -47,7 +50,7 @@ pub fn part1(input: &str) -> u32 {
             let mut v = [0usize; 4];
             let mut n = 4;
             let h = height_of(g[x]);
-            if width < x && g[x - width] != b'\n' && height_of(g[x - width]) <= h + 1 {
+            if width <= x && g[x - width] != b'\n' && height_of(g[x - width]) <= h + 1 {
                 n -= 1;
                 v[n] = x - width;
             }
@@ -68,7 +71,7 @@ pub fn part1(input: &str) -> u32 {
                 n -= 1;
                 v[n] = x + 1;
             }
-            Iter { v, n: n as u8 }
+            Iter { v, n }
         },
         |&n| n == target,
     );
@@ -108,7 +111,7 @@ pub fn part2(input: &str) -> u32 {
                 n -= 1;
                 v[n] = x + 1;
             }
-            Iter { v, n: n as u8 }
+            Iter { v, n }
         },
         |&x| height_of(g[x]) == 0,
     );
