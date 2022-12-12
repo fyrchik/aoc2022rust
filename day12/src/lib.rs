@@ -1,9 +1,5 @@
 use pathfinding::prelude::*;
 
-struct Graph<'a> {
-    raw: Vec<&'a [u8]>,
-}
-
 struct Iter {
     v: [usize; 4],
     n: u8,
@@ -31,24 +27,17 @@ fn height_of(b: u8) -> u8 {
 }
 
 pub fn part1(input: &str) -> u32 {
-    let g = Graph {
-        raw: input
-            .as_bytes()
-            .split(|&c| c == b'\n')
-            .filter(|b| b.len() != 0)
-            .collect(),
-    };
-    let height = g.raw.len();
-    let width = g.raw[0].len();
+    let g = input.as_bytes();
+
+    // Don't perform complex row/col arithmetic, just assume `\n` are unreachable points.
+    let width = g.iter().position(|&c| c == b'\n').unwrap() + 1;
     let mut start = 0;
     let mut target = 0;
-    for i in 0..height {
-        for j in 0..width {
-            if g.raw[i][j] == b'S' {
-                start = i * width + j;
-            } else if g.raw[i][j] == b'E' {
-                target = i * width + j;
-            }
+    for i in 0..g.len() {
+        if g[i] == b'S' {
+            start = i;
+        } else if g[i] == b'E' {
+            target = i;
         }
     }
 
@@ -57,24 +46,27 @@ pub fn part1(input: &str) -> u32 {
         |&x| {
             let mut v = [0usize; 4];
             let mut n = 4;
-            let row = x / width;
-            let col = x % width;
-            let h = height_of(g.raw[row][col]);
-            if 0 < row && height_of(g.raw[row - 1][col]) <= h + 1 {
+            let h = height_of(g[x]);
+            if width < x && g[x - width] != b'\n' && height_of(g[x - width]) <= h + 1 {
                 n -= 1;
-                v[n] = (row - 1) * width + col;
+                v[n] = x - width;
             }
-            if row < height - 1 && height_of(g.raw[row + 1][col]) <= h + 1 {
+            if x + width < g.len() && g[x + width] != b'\n' && height_of(g[x + width]) <= h + 1 {
                 n -= 1;
-                v[n] = (row + 1) * width + col;
+                v[n] = x + width;
             }
-            if 0 < col && height_of(g.raw[row][col - 1]) <= h + 1 {
+            if 0 < x % width && g[x - 1] != b'\n' && height_of(g[x - 1]) <= h + 1 {
                 n -= 1;
-                v[n] = row * width + (col - 1);
+                v[n] = x - 1;
             }
-            if col < width - 1 && height_of(g.raw[row][col + 1]) <= h + 1 {
+            // Perform second check because input can miss trailing '\n'.
+            if x % width + 1 < width
+                && x + 1 < g.len()
+                && g[x + 1] != b'\n'
+                && height_of(g[x + 1]) <= h + 1
+            {
                 n -= 1;
-                v[n] = row * width + (col + 1);
+                v[n] = x + 1;
             }
             Iter { v, n: n as u8 }
         },
@@ -85,56 +77,40 @@ pub fn part1(input: &str) -> u32 {
 }
 
 pub fn part2(input: &str) -> u32 {
-    let g = Graph {
-        raw: input
-            .as_bytes()
-            .split(|&c| c == b'\n')
-            .filter(|b| b.len() != 0)
-            .collect(),
-    };
-    let height = g.raw.len();
-    let width = g.raw[0].len();
-    let mut start = 0;
-    'outer: for i in 0..height {
-        for j in 0..width {
-            if g.raw[i][j] == b'E' {
-                start = i * width + j;
-                break 'outer;
-            }
-        }
-    }
+    let g = input.as_bytes();
+    let width = g.iter().position(|&c| c == b'\n').unwrap() + 1;
+    let start = g.iter().position(|&c| c == b'E').unwrap();
 
     let p = bfs(
         &start,
         |&x| {
             let mut v = [0usize; 4];
             let mut n = 4;
-            let row = x / width;
-            let col = x % width;
-            let h = height_of(g.raw[row][col]);
-            if 0 < row && h - 1 <= height_of(g.raw[row - 1][col]) {
+            let h = height_of(g[x]);
+            if width <= x && g[x - width] != b'\n' && h - 1 <= height_of(g[x - width]) {
                 n -= 1;
-                v[n] = (row - 1) * width + col;
+                v[n] = x - width;
             }
-            if row < height - 1 && h - 1 <= height_of(g.raw[row + 1][col]) {
+            if x + width < g.len() && g[x + width] != b'\n' && h - 1 <= height_of(g[x + width]) {
                 n -= 1;
-                v[n] = (row + 1) * width + col;
+                v[n] = x + width;
             }
-            if 0 < col && h - 1 <= height_of(g.raw[row][col - 1]) {
+            if 0 < x % width && g[x - 1] != b'\n' && h - 1 <= height_of(g[x - 1]) {
                 n -= 1;
-                v[n] = row * width + (col - 1);
+                v[n] = x - 1;
             }
-            if col < width - 1 && h - 1 <= height_of(g.raw[row][col + 1]) {
+            // Perform second check because input can miss trailing '\n'.
+            if x % width + 1 < width
+                && x + 1 < g.len()
+                && g[x + 1] != b'\n'
+                && h - 1 <= height_of(g[x + 1])
+            {
                 n -= 1;
-                v[n] = row * width + (col + 1);
+                v[n] = x + 1;
             }
             Iter { v, n: n as u8 }
         },
-        |&x| {
-            let row = x / width;
-            let col = x % width;
-            height_of(g.raw[row][col]) == 0
-        },
+        |&x| height_of(g[x]) == 0,
     );
 
     p.unwrap().len() as u32 - 1
