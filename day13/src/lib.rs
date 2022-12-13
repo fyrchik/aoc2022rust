@@ -8,69 +8,107 @@ pub fn part1(input: &str) -> u32 {
         .split(|c| *c == b'\n')
         .array_chunks::<3>()
         .enumerate()
-        .filter_map(|(i, p)| {
-            let (x, _) = parse_list(&p[0][1..]);
-            let (y, _) = parse_list(&p[1][1..]);
-
-            let xl = Item::List(x);
-            let yl = Item::List(y);
-            xl.compare(&yl).is_le().then_some(i + 1)
-        })
+        .filter_map(|(i, p)| compare(p[0], p[1]).is_le().then_some(i + 1))
         .sum::<usize>() as u32
 }
 
-#[derive(Debug)]
-enum Item {
-    Number(usize),
-    List(Vec<Item>),
+pub fn part2(input: &str) -> u32 {
+    let two = "[[2]]".as_bytes();
+    let six = "[[6]]".as_bytes();
+
+    let mut two_index = 0;
+    let mut six_index = 0;
+    input.as_bytes().split(|c| *c == b'\n').for_each(|b| {
+        if b.len() == 0 {
+            return;
+        }
+        two_index += (compare(two, b).is_gt()) as u32;
+        six_index += (compare(six, b).is_gt()) as u32;
+    });
+
+    ((two_index + 1) * (six_index + 2)) as u32
 }
 
-impl Item {
-    fn compare(&self, other: &Item) -> Ordering {
-        match (&self, other) {
-            (Item::Number(x), Item::Number(y)) => x.cmp(y),
-            (Item::List(x), Item::List(y)) => {
-                let mut i = 0;
-                while i < x.len() && i < y.len() {
-                    let r = x[i].compare(&y[i]);
-                    if r != Ordering::Equal {
-                        return r;
-                    }
-                    i += 1;
-                }
-                x.len().cmp(&y.len())
+fn compare(a: &[u8], b: &[u8]) -> Ordering {
+    let mut ad = 0;
+    let mut bd = 0;
+    let mut ai = 0;
+    let mut bi = 0;
+    'outer: loop {
+        while ai < a.len() && a[ai] == b'[' {
+            ai += 1;
+            ad += 1;
+        }
+        while bi < b.len() && b[bi] == b'[' {
+            bi += 1;
+            bd += 1;
+        }
+        if ai >= a.len() && bi < b.len() {
+            return Ordering::Less;
+        }
+        if bi >= b.len() && ai < a.len() {
+            return Ordering::Greater;
+        }
+        if ai >= a.len() && bi >= b.len() {
+            return Ordering::Equal;
+        }
+
+        ai += (a[ai] == b',') as usize;
+        bi += (b[bi] == b',') as usize;
+
+        if a[ai] == b']' || b[bi] == b']' {
+            if ad == bd && a[ai] == b']' && b[bi] == b']' {
+                ad -= 1;
+                bd -= 1;
+                ai += 1;
+                bi += 1;
+                continue 'outer;
             }
-            (Item::Number(x), y) => (&Item::List(vec![Item::Number(*x)])).compare(y),
-            (&x, Item::Number(y)) => x.compare(&Item::List(vec![Item::Number(*y)])),
+
+            // Check if a deeper list has more elements.
+            if ad < bd && a[ai] == b']' {
+                return Ordering::Less;
+            }
+            if bd < ad && b[bi] == b']' {
+                return Ordering::Greater;
+            }
+
+            // Check if a deeper list has less elements. This can't be merged with a condition above
+            // because the order is important: both elements can be `]`.
+            if a[ai] == b']' {
+                return Ordering::Less;
+            }
+            if b[bi] == b']' {
+                return Ordering::Greater;
+            }
+        }
+
+        let (na, alen) = int_from_bytes_prefix::<usize>(&a[ai..]);
+        let (nb, blen) = int_from_bytes_prefix::<usize>(&b[bi..]);
+        let r = na.cmp(&nb);
+        if r != Ordering::Equal {
+            return r;
+        }
+
+        ai += alen;
+        bi += blen;
+
+        while ad < bd {
+            if b[bi] != b']' {
+                return Ordering::Less;
+            }
+            bi += 1;
+            bd -= 1;
+        }
+
+        while bd < ad {
+            if a[ai] != b']' {
+                return Ordering::Greater;
+            }
+            ai += 1;
+            ad -= 1;
         }
     }
-}
-
-fn parse_list(p: &[u8]) -> (Vec<Item>, usize) {
-    let mut packet = vec![];
-    let mut i = 0;
-    while i < p.len() {
-        match p[i] {
-            b']' => return (packet, i + 1),
-            b',' => {}
-            b'[' => {
-                let (it, n) = parse_list(&p[i + 1..]);
-                packet.push(Item::List(it));
-                i += n + 1;
-                continue;
-            }
-            b'0'..=b'9' => {
-                let (value, n) = int_from_bytes_prefix::<usize>(&p[i..]);
-                i += n;
-                packet.push(Item::Number(value));
-                continue;
-            }
-            _ => unreachable!(),
-        }
-        i += 1;
-    }
-
-    (packet, i)
 }
 
 fn int_from_bytes_prefix<T>(s: &[u8]) -> (T, usize)
@@ -96,30 +134,6 @@ where
         n += T::from(r);
     }
     (n, s.len())
-}
-
-pub fn part2(input: &str) -> u32 {
-    let mut packets: Vec<_> = input
-        .as_bytes()
-        .split(|c| *c == b'\n')
-        .filter_map(|b| {
-            if b.len() == 0 {
-                None
-            } else {
-                let (x, _) = parse_list(&b[1..]);
-                Some(Item::List(x))
-            }
-        })
-        .collect();
-
-    packets.sort_by(Item::compare);
-    let two = Item::List(vec![Item::List(vec![Item::Number(2)])]);
-    let six = Item::List(vec![Item::List(vec![Item::Number(6)])]);
-
-    let two_index = packets.partition_point(|p| two.compare(p) == Ordering::Greater);
-    let six_index = packets.partition_point(|p| six.compare(p) == Ordering::Greater);
-
-    ((two_index + 1) * (six_index + 2)) as u32
 }
 
 pub fn run_part1() {
