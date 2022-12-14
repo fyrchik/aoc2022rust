@@ -77,46 +77,40 @@ fn sieve(
     depth: usize,
 ) -> Option<Point> {
     let mut current = start;
-    trail.push(current);
     loop {
-        let x = current.x;
+        trail.push(current);
+
         let y = current.y + 1;
-        if y > depth {
+        if depth < y {
             return None;
         }
-        match field[y * width + x] {
-            State::Air => {
-                current.y += 1;
-                trail.push(current);
-                continue;
-            }
-            State::Rock | State::Sand => {
-                if current.x > 0 {
-                    let x = current.x - 1;
-                    if field[y * width + x] == State::Air {
-                        current.x -= 1;
-                        current.y += 1;
-                        trail.push(current);
-                        continue;
-                    }
-                } else {
-                    return None;
-                }
-                let x = current.x + 1;
-                if x < width {
-                    if field[y * width + x] == State::Air {
-                        current.x += 1;
-                        current.y += 1;
-                        trail.push(current);
-                        continue;
-                    }
 
-                    return Some(current);
-                } else {
-                    return None;
-                }
-            }
+        if field[y * width + current.x] == State::Air {
+            current.y += 1;
+            continue;
         }
+
+        if current.x == 0 {
+            return None;
+        }
+
+        if field[y * width + current.x - 1] == State::Air {
+            current.x -= 1;
+            current.y += 1;
+            continue;
+        }
+
+        if width <= current.x + 1 {
+            return None;
+        }
+
+        if field[y * width + current.x + 1] == State::Air {
+            current.x += 1;
+            current.y += 1;
+            continue;
+        }
+
+        return Some(current);
     }
 }
 
@@ -138,25 +132,25 @@ fn parse(input: &str, is_second_part: bool) -> (Vec<State>, usize, usize, usize)
     let mut max_x = usize::MIN;
     let mut max_y = usize::MIN;
     let mut points = vec![];
-    input
-        .as_bytes()
-        .split(|c| *c == b'\n')
-        .for_each(|b| {
-            let mut i = 0;
-            while i < b.len() {
-               let (x, x_len) = int_from_bytes_prefix::<usize>(&b[i..]);
-               i += x_len + 1;
+    input.as_bytes().split(|c| *c == b'\n').for_each(|b| {
+        let mut i = 0;
+        while i < b.len() {
+            let (x, x_len) = int_from_bytes_prefix::<usize>(&b[i..]);
+            i += x_len + 1;
 
-               let (y, y_len) = int_from_bytes_prefix::<usize>(&b[i..]);
-               i += y_len + 4; // + " -> "
+            let (y, y_len) = int_from_bytes_prefix::<usize>(&b[i..]);
+            i += y_len + 4; // + " -> "
 
-               min_x = min_x.min(x);
-               max_x = max_x.max(x);
-               max_y = max_y.max(y);
-               points.push(Point { x, y });
-            }
-            points.push(Point{x: usize::MAX, y: usize::MAX});
+            min_x = min_x.min(x);
+            max_x = max_x.max(x);
+            max_y = max_y.max(y);
+            points.push(Point { x, y });
+        }
+        points.push(Point {
+            x: usize::MAX,
+            y: usize::MAX,
         });
+    });
 
     if is_second_part {
         min_x = min_x.min(500 - max_y - 2);
