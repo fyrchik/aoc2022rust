@@ -3,57 +3,60 @@
 #![feature(iter_array_chunks)]
 
 pub fn part1(input: &str) -> u32 {
-    let (mut field, min, max) = parse(input);
-    let start = Point {
-        x: 500 - min.x,
+    let (mut field, min_x, max) = parse(input, false);
+    let initial = Point {
+        x: 500 - min_x,
         y: 0,
     };
 
     let mut count = 0;
-    while let Some(p) = sieve(&field, start, max) {
-        let c = &mut field[p.y][p.x];
+    // Trail contains all visited cells on a field.
+    // After calling `sieve` the last item will be the position of a node.
+    let mut trail = vec![initial; 1];
+    loop {
+        let start = trail.pop().unwrap();
+        if let Some(p) = sieve(&field, &mut trail, start, max) {
+            let c = &mut field[p.y][p.x];
 
-        assert_eq!(State::Air, *c);
-        *c = State::Sand;
+            debug_assert_eq!(State::Air, *c);
+            *c = State::Sand;
 
-        count += 1
+            let x = trail.pop();
+            debug_assert_eq!(Some(p), x);
+
+            count += 1
+        } else {
+            break;
+        }
     }
     count
 }
 
 pub fn part2(input: &str) -> u32 {
-    let (mut field, min, mut max) = parse(input);
-
-    let minx = min.x.min(500 - max.y - 2);
-    let maxx = max.x.max(500 + max.y + 2);
-
-    field.iter_mut().for_each(|row| {
-        let mut new_row = vec![State::Air; maxx - minx + 1];
-        for i in 0..row.len() {
-            new_row[min.x - minx + i] = row[i];
-        }
-        *row = new_row;
-    });
-    field.push(vec![State::Air; maxx - minx + 1]);
-    field.push(vec![State::Rock; maxx - minx + 1]);
-
-    max.y += 2;
-    let start = Point {
-        x: 500 - minx,
+    let (mut field, min_x, max) = parse(input, true);
+    let initial = Point {
+        x: 500 - min_x,
         y: 0,
     };
 
     let mut count = 0;
-    while let Some(p) = sieve(&field, start, max) {
-        if p == start {
-            break;
-        }
-        let c = &mut field[p.y][p.x];
-        *c = State::Sand;
+    let mut trail = vec![initial; 1];
+    while let Some(start) = trail.pop() {
+        if let Some(p) = sieve(&field, &mut trail, start, max) {
+            let c = &mut field[p.y][p.x];
 
-        count += 1
+            debug_assert_eq!(State::Air, *c);
+            *c = State::Sand;
+
+            let x = trail.pop();
+            debug_assert_eq!(Some(p), x);
+
+            count += 1
+        } else {
+            unreachable!();
+        }
     }
-    count + 1
+    count
 }
 
 #[allow(dead_code)]
@@ -68,8 +71,9 @@ fn print_field(field: &[Vec<State>]) {
     })
 }
 
-fn sieve(field: &[Vec<State>], start: Point, max: Point) -> Option<Point> {
+fn sieve(field: &[Vec<State>], trail: &mut Vec<Point>, start: Point, max: Point) -> Option<Point> {
     let mut current = start;
+    trail.push(current);
     loop {
         let x = current.x;
         let y = current.y + 1;
@@ -79,6 +83,7 @@ fn sieve(field: &[Vec<State>], start: Point, max: Point) -> Option<Point> {
         match field[y][x] {
             State::Air => {
                 current.y += 1;
+                trail.push(current);
                 continue;
             }
             State::Rock | State::Sand => {
@@ -87,6 +92,7 @@ fn sieve(field: &[Vec<State>], start: Point, max: Point) -> Option<Point> {
                     if field[y][x] == State::Air {
                         current.x -= 1;
                         current.y += 1;
+                        trail.push(current);
                         continue;
                     }
                 } else {
@@ -97,14 +103,16 @@ fn sieve(field: &[Vec<State>], start: Point, max: Point) -> Option<Point> {
                     if field[y][x] == State::Air {
                         current.x += 1;
                         current.y += 1;
+                        trail.push(current);
                         continue;
                     }
 
                     return Some(current);
+                } else {
+                    return None;
                 }
             }
         }
-        return None;
     }
 }
 
@@ -121,15 +129,10 @@ enum State {
     Sand,
 }
 
-fn parse(input: &str) -> (Vec<Vec<State>>, Point, Point) {
-    let mut min = Point {
-        x: usize::MAX,
-        y: usize::MAX,
-    };
-    let mut max = Point {
-        x: usize::MIN,
-        y: usize::MIN,
-    };
+fn parse(input: &str, is_second_part: bool) -> (Vec<Vec<State>>, usize, Point) {
+    let mut min_x = usize::MAX;
+    let mut max_x = usize::MIN;
+    let mut max_y = usize::MIN;
     let points: Vec<Vec<Point>> = input
         .lines()
         .map(|s| {
@@ -138,37 +141,50 @@ fn parse(input: &str) -> (Vec<Vec<State>>, Point, Point) {
                     let pt = p.split_once(',').unwrap();
                     let x = pt.0.parse().unwrap();
                     let y = pt.1.parse().unwrap();
-                    min.x = min.x.min(x);
-                    max.x = max.x.max(x);
-                    max.y = max.y.max(y);
+                    min_x = min_x.min(x);
+                    max_x = max_x.max(x);
+                    max_y = max_y.max(y);
                     Point { x, y }
                 })
                 .collect()
         })
         .collect();
 
-    let mut field: Vec<Vec<State>> = Vec::with_capacity(max.y + 1);
-    for _ in 0..=max.y {
-        field.push(vec![State::Air; max.x - min.x + 1]);
+    let mut height = max_y + 1;
+    if is_second_part {
+        min_x = min_x.min(500 - max_y - 2);
+        max_x = max_x.max(500 + max_y + 2);
+        height += 2;
+    }
+
+    let mut field: Vec<Vec<State>> = Vec::with_capacity(height);
+    for _ in 0..=max_y {
+        field.push(vec![State::Air; max_x - min_x + 1]);
     }
 
     for l in points.iter() {
         l.array_windows::<2>().for_each(|p| {
             if p[0].x == p[1].x {
                 for y in p[0].y.min(p[1].y)..=p[0].y.max(p[1].y) {
-                    field[y][p[0].x - min.x] = State::Rock;
+                    field[y][p[0].x - min_x] = State::Rock;
                 }
             } else {
                 debug_assert_eq!(p[0].y, p[1].y);
 
                 for x in p[0].x.min(p[1].x)..=p[0].x.max(p[1].x) {
-                    field[p[0].y][x - min.x] = State::Rock;
+                    field[p[0].y][x - min_x] = State::Rock;
                 }
             }
         })
     }
 
-    (field, min, max)
+    if is_second_part {
+        field.push(vec![State::Air; max_x - min_x + 1]);
+        field.push(vec![State::Rock; max_x - min_x + 1]);
+        max_y += 2;
+    }
+
+    (field, min_x, Point { x: max_x, y: max_y })
 }
 
 pub fn run_part1() {
