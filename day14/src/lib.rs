@@ -1,6 +1,4 @@
-#![feature(array_chunks)]
 #![feature(array_windows)]
-#![feature(iter_array_chunks)]
 
 pub fn part1(input: &str) -> u32 {
     let (mut field, min_x, max) = parse(input, false);
