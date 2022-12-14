@@ -44,7 +44,7 @@ are close to those obtained (scientifically) with `cargo criterion`.
 | [day 11](https://adventofcode.com/2022/day/11)   | [` 0.010 ms`](./day11/src/lib.rs) | [` 1.220 ms`](./day11/src/lib.rs) |
 | [day 12](https://adventofcode.com/2022/day/12)   | [` 0.511 ms`](./day12/src/lib.rs) | [` 0.399 ms`](./day12/src/lib.rs) |
 | [day 13](https://adventofcode.com/2022/day/13)   | [` 0.026 ms`](./day13/src/lib.rs) | [` 0.029 ms`](./day13/src/lib.rs) |
-| [day 14](https://adventofcode.com/2022/day/14)   | [` 0.067 ms`](./day14/src/lib.rs) | [` 0.360 ms`](./day14/src/lib.rs) |
+| [day 14](https://adventofcode.com/2022/day/14)   | [` 0.067 ms`](./day14/src/lib.rs) | [` 0.195 ms`](./day14/src/lib.rs) |
 
 
 |              | one-by-one (1 CPU core)                  | parallel                                     |

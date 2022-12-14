@@ -1,5 +1,7 @@
 #![feature(array_windows)]
 
+use std::collections::VecDeque;
+
 pub fn part1(input: &str) -> u32 {
     let (mut field, min_x, width, depth) = parse(input, false);
     let initial = Point {
@@ -37,36 +39,52 @@ pub fn part2(input: &str) -> u32 {
         y: 0,
     };
 
-    let mut count = 0;
-    let mut trail = vec![initial; 1];
-    while let Some(start) = trail.pop() {
-        if let Some(p) = sieve(&field, &mut trail, start, width, depth) {
-            let c = &mut field[p.y * width + p.x];
-
-            debug_assert_eq!(State::Air, *c);
-            *c = State::Sand;
-
-            let x = trail.pop();
-            debug_assert_eq!(Some(p), x);
-
-            count += 1
-        } else {
-            unreachable!();
-        }
-    }
-    count
+    bfs(&mut field, initial, width, depth) as u32
 }
 
 #[allow(dead_code)]
-fn print_field(field: &[Vec<State>]) {
-    field.iter().for_each(|row| {
-        row.iter().for_each(|c| match c {
+fn print_field(field: &[State], width: usize) {
+    for (i, s) in field.iter().enumerate() {
+        if i % width == 0 {
+            println!();
+        }
+        match *s {
             State::Air => print!("."),
             State::Rock => print!("#"),
             State::Sand => print!("o"),
-        });
-        println!();
-    })
+        }
+    }
+}
+
+fn bfs(field: &mut [State], start: Point, width: usize, depth: usize) -> usize {
+    let mut queue = VecDeque::new();
+    queue.push_back(start);
+
+    field[start.y * width + start.x] = State::Sand;
+
+    let mut count = 0;
+    while let Some(p) = queue.pop_front() {
+        count += 1;
+
+        let y = p.y + 1;
+        if depth < y {
+            continue;
+        }
+        let base = y * width + p.x;
+        if field[base] == State::Air {
+            field[base] = State::Sand;
+            queue.push_back(Point { x: p.x, y });
+        }
+        if 0 < p.x && field[base - 1] == State::Air {
+            field[base - 1] = State::Sand;
+            queue.push_back(Point { x: p.x - 1, y });
+        }
+        if p.x + 1 < width && field[base + 1] == State::Air {
+            field[base + 1] = State::Sand;
+            queue.push_back(Point { x: p.x + 1, y });
+        }
+    }
+    count
 }
 
 fn sieve(
