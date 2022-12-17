@@ -236,16 +236,14 @@ fn freeze(field: &mut [u8], r: Rock, row: usize, col: usize) -> usize {
 }
 
 fn can_move(field: &[u8], r: Rock, dir: Dir, row: usize, col: usize) -> bool {
-    assert!(col < 7);
-
     match dir {
         Dir::Down => {
             0 < row
                 && match r {
                     Rock::HLine => field[row - 1] & (0xF << (7 - col - 3)) == 0,
                     Rock::Crest => {
-                        field[row - 1] & (1 << (7 - col - 1)) == 0
-                            && field[row] & (0x5 << (7 - col - 2)) == 0
+                        field[row - 1] & (1 << (7 - col - 1)) | field[row] & (0x5 << (7 - col - 2))
+                            == 0
                     }
                     Rock::Corner => field[row - 1] & (0x7 << (7 - col - 2)) == 0,
                     Rock::VLine => field[row - 1] & (1 << (7 - col)) == 0,
@@ -257,52 +255,43 @@ fn can_move(field: &[u8], r: Rock, dir: Dir, row: usize, col: usize) -> bool {
                 && match r {
                     Rock::HLine => field[row] & (1 << (7 - col + 1)) == 0,
                     Rock::Crest => {
-                        field[row] & (1 << (7 - col)) == 0
-                            && field[row + 1] & (1 << (7 - col + 1)) == 0
-                            && field[row + 2] & (1 << (7 - col)) == 0
+                        (field[row] | field[row + 2]) & (1 << (7 - col))
+                            | field[row + 1] & (1 << (7 - col + 1))
+                            == 0
                     }
                     Rock::Corner => {
-                        field[row] & (1 << (7 - col + 1)) == 0
-                            && field[row + 1] & (1 << (7 - col - 1)) == 0
-                            && field[row + 2] & (1 << (7 - col - 1)) == 0
+                        field[row] & (1 << (7 - col + 1))
+                            | (field[row + 1] | field[row + 2]) & (1 << (7 - col - 1))
+                            == 0
                     }
                     Rock::VLine => {
-                        field[row] & (1 << (7 - col + 1)) == 0
-                            && field[row + 1] & (1 << (7 - col + 1)) == 0
-                            && field[row + 2] & (1 << (7 - col + 1)) == 0
-                            && field[row + 3] & (1 << (7 - col + 1)) == 0
+                        (field[row] | field[row + 1] | field[row + 2] | field[row + 3])
+                            & (1 << (7 - col + 1))
+                            == 0
                     }
-                    Rock::Square => {
-                        field[row] & (1 << (7 - col + 1)) == 0
-                            && field[row + 1] & (1 << (7 - col + 1)) == 0
-                    }
+                    Rock::Square => (field[row] | field[row + 1]) & (1 << (7 - col + 1)) == 0,
                 }
         }
         Dir::Right => match r {
             Rock::HLine => col + 4 < 7 && field[row] & (1 << (7 - col - 4)) == 0,
             Rock::Crest => {
                 col + 3 < 7
-                    && field[row] & (1 << (7 - col - 2)) == 0
-                    && field[row + 1] & (1 << (7 - col - 3)) == 0
-                    && field[row + 2] & (1 << (7 - col - 2)) == 0
+                    && (field[row] | field[row + 2]) & (1 << (7 - col - 2))
+                        | field[row + 1] & (1 << (7 - col - 3))
+                        == 0
             }
             Rock::Corner => {
                 col + 3 < 7
-                    && field[row] & (1 << (7 - col - 3)) == 0
-                    && field[row + 1] & (1 << (7 - col - 3)) == 0
-                    && field[row + 2] & (1 << (7 - col - 3)) == 0
+                    && (field[row] | field[row + 1] | field[row + 2]) & (1 << (7 - col - 3)) == 0
             }
             Rock::VLine => {
                 col + 1 < 7
-                    && field[row] & (1 << (7 - col - 1)) == 0
-                    && field[row + 1] & (1 << (7 - col - 1)) == 0
-                    && field[row + 2] & (1 << (7 - col - 1)) == 0
-                    && field[row + 3] & (1 << (7 - col - 1)) == 0
+                    && (field[row] | field[row + 1] | field[row + 2] | field[row + 3])
+                        & (1 << (7 - col - 1))
+                        == 0
             }
             Rock::Square => {
-                col + 2 < 7
-                    && field[row] & (1 << (7 - col - 2)) == 0
-                    && field[row + 1] & (1 << (7 - col - 2)) == 0
+                col + 2 < 7 && (field[row] | field[row + 1]) & (1 << (7 - col - 2)) == 0
             }
         },
     }
