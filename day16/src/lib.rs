@@ -1,6 +1,7 @@
 use rustc_hash::FxHashMap;
 
 pub fn part1(input: &str) -> u32 {
+    use pathfinding::prelude::*;
     let (dist, rates, start) = parse(input);
     let mut seen = u16::MAX;
     for (i, v) in rates.iter().enumerate() {
@@ -9,8 +10,91 @@ pub fn part1(input: &str) -> u32 {
         }
     }
 
-    let g = Graph { dist, rates };
-    g.dfs(seen, start, 0, 30)
+    // Calculate "shortest" path by having "u32::MAX - flow" as a metric.
+    let res = astar(
+        &(start, seen, 30u32),
+        |&(node, seen, time)| {
+            let mut v = [((0, 0, 0), ReverseU32(0)); 16];
+            let mut n = 16;
+
+            // Allow to end immediately with zero cost.
+            n -= 1;
+            v[n] = ((start, u16::MAX, 0), ReverseU32(0));
+
+            for t in (0..16).filter(|&t| seen & (1 << t) == 0 && time > dist[node][t]) {
+                let d = time - dist[node][t] - 1;
+
+                n -= 1;
+                v[n] = ((t, seen | (1 << t), d), ReverseU32(d * rates[t]))
+            }
+            Iter { v, n }
+        },
+        |&(n, seen, time)| {
+            let mut flow = 0;
+            let mut min_path = u32::MAX;
+            for t in (0..16).filter(|&t| seen & (1 << t) == 0) {
+                flow += rates[t];
+                min_path = min_path.min(dist[n][t])
+            }
+            ReverseU32(if min_path < time {
+                flow * (time - min_path)
+            } else {
+                0
+            })
+        },
+        |&(_, _, time)| time == 0,
+    );
+    res.unwrap().1 .0
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+struct ReverseU32(u32);
+
+impl core::ops::Add for ReverseU32 {
+    type Output = ReverseU32;
+    fn add(self, rhs: Self) -> Self::Output {
+        ReverseU32(self.0 + rhs.0)
+    }
+}
+
+impl num_traits::Zero for ReverseU32 {
+    fn zero() -> Self {
+        ReverseU32(0)
+    }
+    fn is_zero(&self) -> bool {
+        self.0 == 0
+    }
+}
+
+impl std::cmp::PartialOrd for ReverseU32 {
+    fn partial_cmp(&self, other: &ReverseU32) -> Option<std::cmp::Ordering> {
+        Some(other.0.cmp(&self.0))
+    }
+}
+
+impl std::cmp::Ord for ReverseU32 {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other.0.cmp(&self.0)
+    }
+}
+
+// Iter represents an iterator over nodes neighbours.
+// It is constant in size and we should perform no allocations when returning it.
+struct Iter<T> {
+    v: [T; 16],
+    n: usize,
+}
+
+impl<T: Copy> Iterator for Iter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.n == 16 {
+            return None;
+        }
+        let item = self.v[self.n];
+        self.n += 1;
+        Some(item)
+    }
 }
 
 pub fn part2(input: &str) -> u32 {
@@ -49,16 +133,6 @@ struct Graph {
 }
 
 impl Graph {
-    fn dfs(&self, seen: u16, current: usize, opened: u32, time: u32) -> u32 {
-        let mut max = opened * time;
-        for i in (0..16).filter(|&t| seen & (1 << t) == 0 && time > self.dist[current][t]) {
-            let path = self.dist[current][i];
-            let m = self.dfs(seen | (1 << i), i, opened + self.rates[i], time - path - 1);
-            max = max.max(m + opened * (path + 1));
-        }
-        max
-    }
-
     fn dfs_multi(
         &self,
         mask: u16,
