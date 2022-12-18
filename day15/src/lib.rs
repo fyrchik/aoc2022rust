@@ -9,16 +9,16 @@ pub fn part1(input: &str, row: isize) -> u32 {
             let b = s.as_bytes();
             let mut start = 12;
 
-            let (sx, sx_len) = int_from_bytes_prefix::<isize>(&b[start..]);
+            let (sx, sx_len) = aoc::int_from_bytes_prefix::<isize>(&b[start..]);
             start += sx_len + 4; // ", y="
 
-            let (sy, sy_len) = int_from_bytes_prefix::<isize>(&b[start..]);
+            let (sy, sy_len) = aoc::int_from_bytes_prefix::<isize>(&b[start..]);
             start += sy_len + 25; // ": closest beacon is at x="
 
-            let (bx, bx_len) = int_from_bytes_prefix::<isize>(&b[start..]);
+            let (bx, bx_len) = aoc::int_from_bytes_prefix::<isize>(&b[start..]);
             start += bx_len + 4; // ", y="
 
-            let (by, _) = int_from_bytes_prefix::<isize>(&b[start..]);
+            let (by, _) = aoc::int_from_bytes_prefix::<isize>(&b[start..]);
             if by == row {
                 let index = beacons.partition_point(|&x| x < bx);
                 if index == beacons.len() || beacons[index] != bx {
@@ -69,16 +69,16 @@ pub fn part2(input: &str, max: isize) -> u64 {
         let b = s.as_bytes();
         let mut start = 12;
 
-        let (sx, sx_len) = int_from_bytes_prefix::<isize>(&b[start..]);
+        let (sx, sx_len) = aoc::int_from_bytes_prefix::<isize>(&b[start..]);
         start += sx_len + 4; // ", y="
 
-        let (sy, sy_len) = int_from_bytes_prefix::<isize>(&b[start..]);
+        let (sy, sy_len) = aoc::int_from_bytes_prefix::<isize>(&b[start..]);
         start += sy_len + 25; // ": closest beacon is at x="
 
-        let (bx, bx_len) = int_from_bytes_prefix::<isize>(&b[start..]);
+        let (bx, bx_len) = aoc::int_from_bytes_prefix::<isize>(&b[start..]);
         start += bx_len + 4; // ", y="
 
-        let (by, _) = int_from_bytes_prefix::<isize>(&b[start..]);
+        let (by, _) = aoc::int_from_bytes_prefix::<isize>(&b[start..]);
 
         let dist = (sx.abs_diff(bx) + sy.abs_diff(by)) as isize;
         if max < sy - dist || sy + dist < 0 {
@@ -143,42 +143,6 @@ pub fn run_part1() {
 
 pub fn run_part2() {
     println!("{}", part2(include_str!("../input"), 4_000_000));
-}
-
-fn int_from_bytes_prefix<T>(s: &[u8]) -> (T, usize)
-where
-    T: From<i8> + std::ops::MulAssign + std::ops::AddAssign,
-{
-    let mut n = T::from(0);
-    let mut signum = 1;
-    for (i, &c) in s.iter().enumerate() {
-        let r = match c {
-            b'0' => 0,
-            b'1' => 1,
-            b'2' => 2,
-            b'3' => 3,
-            b'4' => 4,
-            b'5' => 5,
-            b'6' => 6,
-            b'7' => 7,
-            b'8' => 8,
-            b'9' => 9,
-            b'-' => {
-                debug_assert_eq!(i, 0);
-                signum = -1;
-                continue;
-            }
-            _ => {
-                n *= T::from(signum);
-                return (n, i);
-            }
-        };
-        n *= T::from(10);
-        n += T::from(r);
-    }
-
-    n *= T::from(signum);
-    (n, s.len())
 }
 
 #[cfg(test)]

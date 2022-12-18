@@ -1,25 +1,5 @@
 use pathfinding::prelude::*;
 
-// Iter represents an iterator over nodes neighbours.
-// It is constant in size and we should perform no allocations when returning it.
-struct Iter {
-    v: [usize; 4],
-    n: usize,
-}
-
-impl Iterator for Iter {
-    type Item = usize;
-    fn next(&mut self) -> Option<usize> {
-        if self.n == 4 {
-            return None;
-        }
-        // I didn't check `& 0x3` part, but this way we _could_ omit bound checks in theory.
-        let item = self.v[self.n & 0x3];
-        self.n += 1;
-        Some(item)
-    }
-}
-
 fn height_of(b: u8) -> u8 {
     match b {
         b'a'..=b'z' => b - b'a',
@@ -71,7 +51,7 @@ pub fn part1(input: &str) -> u32 {
                 n -= 1;
                 v[n] = x + 1;
             }
-            Iter { v, n }
+            aoc::Iter { v, n }
         },
         |&n| n == target,
     );
@@ -111,7 +91,7 @@ pub fn part2(input: &str) -> u32 {
                 n -= 1;
                 v[n] = x + 1;
             }
-            Iter { v, n }
+            aoc::Iter { v, n }
         },
         |&x| height_of(g[x]) == 0,
     );

@@ -107,7 +107,7 @@ fn parse(input: &str) -> (Vec<Monkey>, Vec<Item>) {
         .enumerate()
         .map(|(i, ls)| {
             items.extend(ls[1][18..].split(|&c| c == b',').map(move |b| Item {
-                worry_level: int_from_bytes::<u32>(b),
+                worry_level: aoc::uint_from_bytes::<u32>(if b[0] == b' ' { &b[1..] } else { b }),
                 monkey_index: i as u8,
             }));
             let raw_op = ls[2][23..]
@@ -116,48 +116,26 @@ fn parse(input: &str) -> (Vec<Monkey>, Vec<Item>) {
                 .next()
                 .unwrap();
             let op = match raw_op[0][0] {
-                b'+' => Operation::Add(int_from_bytes::<u8>(raw_op[1])),
+                b'+' => Operation::Add(aoc::uint_from_bytes::<u8>(raw_op[1])),
                 b'*' => {
                     if raw_op[1][0] == b'o' {
                         Operation::Square
                     } else {
-                        Operation::Mul(int_from_bytes::<u8>(raw_op[1]))
+                        Operation::Mul(aoc::uint_from_bytes::<u8>(raw_op[1]))
                     }
                 }
 
                 _ => unreachable!("unexpected operation: {}", raw_op[0][0] as char),
             };
-            let test = int_from_bytes::<u8>(&ls[3][21..]);
+            let test = aoc::uint_from_bytes::<u8>(&ls[3][21..]);
             let targets = [
-                int_from_bytes::<u8>(&ls[5][30..]),
-                int_from_bytes::<u8>(&ls[4][29..]),
+                aoc::uint_from_bytes::<u8>(&ls[5][30..]),
+                aoc::uint_from_bytes::<u8>(&ls[4][29..]),
             ];
             Monkey { op, test, targets }
         })
         .collect();
     (monkeys, items)
-}
-
-fn int_from_bytes<T>(s: &[u8]) -> T
-where
-    T: From<u8> + std::ops::Mul<T, Output = T> + std::ops::Add<T, Output = T>,
-{
-    s.iter().fold(T::from(0), |n, c| {
-        let r = match c {
-            b'0' => T::from(0),
-            b'1' => T::from(1),
-            b'2' => T::from(2),
-            b'3' => T::from(3),
-            b'4' => T::from(4),
-            b'5' => T::from(5),
-            b'6' => T::from(6),
-            b'7' => T::from(7),
-            b'8' => T::from(8),
-            b'9' => T::from(9),
-            _ => T::from(0),
-        };
-        n * T::from(10) + r
-    })
 }
 
 pub fn run_part1() {

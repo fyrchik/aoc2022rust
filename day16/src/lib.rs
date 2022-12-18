@@ -27,7 +27,7 @@ pub fn part1(input: &str) -> u32 {
                 n -= 1;
                 v[n] = ((t, seen | (1 << t), d), ReverseU32(d * rates[t]))
             }
-            Iter { v, n }
+            aoc::Iter { v, n }
         },
         |&(n, seen, time)| {
             let mut flow = 0;
@@ -75,25 +75,6 @@ impl std::cmp::PartialOrd for ReverseU32 {
 impl std::cmp::Ord for ReverseU32 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         other.0.cmp(&self.0)
-    }
-}
-
-// Iter represents an iterator over nodes neighbours.
-// It is constant in size and we should perform no allocations when returning it.
-struct Iter<T> {
-    v: [T; 16],
-    n: usize,
-}
-
-impl<T: Copy> Iterator for Iter<T> {
-    type Item = T;
-    fn next(&mut self) -> Option<T> {
-        if self.n == 16 {
-            return None;
-        }
-        let item = self.v[self.n];
-        self.n += 1;
-        Some(item)
     }
 }
 
@@ -184,7 +165,7 @@ fn parse(input: &str) -> (Vec<Vec<u32>>, Vec<u32>, usize) {
                 rates.len() - 1
             });
 
-            let (rate, rate_len) = int_from_bytes_prefix::<u32>(&b[23..]);
+            let (rate, rate_len) = aoc::uint_from_bytes_prefix::<u32>(&b[23..]);
             rates[index] = rate;
 
             let mut i = 23 + rate_len + 25;
@@ -245,32 +226,6 @@ fn parse(input: &str) -> (Vec<Vec<u32>>, Vec<u32>, usize) {
         }
     }
     (graph, rates, start)
-}
-
-fn int_from_bytes_prefix<T>(s: &[u8]) -> (T, usize)
-where
-    T: From<u8> + std::ops::MulAssign + std::ops::AddAssign,
-{
-    let mut n = T::from(0);
-    for (i, &c) in s.iter().enumerate() {
-        let r = match c {
-            b'0' => 0,
-            b'1' => 1,
-            b'2' => 2,
-            b'3' => 3,
-            b'4' => 4,
-            b'5' => 5,
-            b'6' => 6,
-            b'7' => 7,
-            b'8' => 8,
-            b'9' => 9,
-            _ => return (n, i),
-        };
-        n *= T::from(10);
-        n += T::from(r);
-    }
-
-    (n, s.len())
 }
 
 pub fn run_part1() {

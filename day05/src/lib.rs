@@ -25,7 +25,7 @@ pub fn part1(input: &str) -> String {
         .split(|c| matches!(c, b' ' | b'\n'))
         .skip(1)
         .step_by(2)
-        .map(int_from_bytes::<usize>)
+        .map(aoc::uint_from_bytes::<usize>)
         .array_chunks::<3>()
         .for_each(|[n, from, to]| {
             let (f, t) = get_mut_elements(&mut stack, from - 1, to - 1);
@@ -63,7 +63,7 @@ pub fn part2(input: &str) -> String {
         .split(|c| matches!(c, b' ' | b'\n'))
         .skip(1)
         .step_by(2)
-        .map(int_from_bytes::<usize>)
+        .map(aoc::uint_from_bytes::<usize>)
         .array_chunks::<3>()
         .for_each(|[n, from, to]| {
             let (f, t) = get_mut_elements(&mut stack, from - 1, to - 1);
@@ -88,28 +88,6 @@ fn get_mut_elements<T>(v: &mut Vec<T>, a: usize, b: usize) -> (&mut T, &mut T) {
         let (x, y) = v.split_at_mut(a);
         (&mut y[0], &mut x[b])
     }
-}
-
-fn int_from_bytes<T>(s: &[u8]) -> T
-where
-    T: From<u8> + std::ops::Mul<T, Output = T> + std::ops::Add<T, Output = T>,
-{
-    s.iter().fold(T::from(0), |n, c| {
-        let r = match c {
-            b'0' => Some(T::from(0)),
-            b'1' => Some(T::from(1)),
-            b'2' => Some(T::from(2)),
-            b'3' => Some(T::from(3)),
-            b'4' => Some(T::from(4)),
-            b'5' => Some(T::from(5)),
-            b'6' => Some(T::from(6)),
-            b'7' => Some(T::from(7)),
-            b'8' => Some(T::from(8)),
-            b'9' => Some(T::from(9)),
-            _ => None,
-        };
-        n * T::from(10) + r.unwrap()
-    })
 }
 
 pub fn run_part1() {

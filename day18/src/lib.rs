@@ -7,13 +7,13 @@ pub fn part1(input: &str) -> u32 {
         .split(|c| *c == b'\n')
         .map(|b| {
             let mut start = 0;
-            let (x, x_len) = int_from_bytes_prefix(&b[start..]);
+            let (x, x_len) = aoc::int_from_bytes_prefix(&b[start..]);
             start += x_len + 1;
 
-            let (y, y_len) = int_from_bytes_prefix(&b[start..]);
+            let (y, y_len) = aoc::int_from_bytes_prefix(&b[start..]);
             start += y_len + 1;
 
-            let (z, _) = int_from_bytes_prefix(&b[start..]);
+            let (z, _) = aoc::int_from_bytes_prefix(&b[start..]);
             (x, y, z)
         })
         .collect();
@@ -39,13 +39,13 @@ pub fn part2(input: &str) -> u32 {
         .split(|c| *c == b'\n')
         .map(|b| {
             let mut start = 0;
-            let (x, x_len) = int_from_bytes_prefix(&b[start..]);
+            let (x, x_len) = aoc::int_from_bytes_prefix(&b[start..]);
             start += x_len + 1;
 
-            let (y, y_len) = int_from_bytes_prefix(&b[start..]);
+            let (y, y_len) = aoc::int_from_bytes_prefix(&b[start..]);
             start += y_len + 1;
 
-            let (z, _) = int_from_bytes_prefix(&b[start..]);
+            let (z, _) = aoc::int_from_bytes_prefix(&b[start..]);
 
             min.0 = min.0.min(x);
             min.1 = min.1.min(y);
@@ -124,32 +124,6 @@ pub fn part2(input: &str) -> u32 {
     }
 
     count as u32
-}
-
-fn int_from_bytes_prefix<T>(s: &[u8]) -> (T, usize)
-where
-    T: From<u8> + std::ops::MulAssign + std::ops::AddAssign,
-{
-    let mut n = T::from(0);
-    for (i, &c) in s.iter().enumerate() {
-        let r = match c {
-            b'0' => 0,
-            b'1' => 1,
-            b'2' => 2,
-            b'3' => 3,
-            b'4' => 4,
-            b'5' => 5,
-            b'6' => 6,
-            b'7' => 7,
-            b'8' => 8,
-            b'9' => 9,
-            _ => return (n, i),
-        };
-        n *= T::from(10);
-        n += T::from(r);
-    }
-
-    (n, s.len())
 }
 
 pub fn run_part1() {

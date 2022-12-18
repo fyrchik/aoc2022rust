@@ -75,6 +75,7 @@ criterion_main!(benches);
 BENCH_TEMPLATE
 
 cat <<CARGO_TOML >>"$outdir/Cargo.toml"
+aoc = { path = "../aoc" }
 
 [profile.release]
 debug = true

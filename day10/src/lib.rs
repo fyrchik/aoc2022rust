@@ -15,7 +15,7 @@ pub fn part1(input: &str) -> i32 {
 
         if b[0] == b'a' {
             strength += (rem == 18) as i32 * register * (cycle + 1);
-            register += int_from_bytes::<i32>(&b[5..]);
+            register += aoc::int_from_bytes::<i32>(&b[5..]);
             cycle += 1
         }
     });
@@ -53,36 +53,13 @@ pub fn part2(input: &str) -> String {
 
             cycle += 1;
 
-            let n = int_from_bytes::<isize>(&b[5..]);
+            let n = aoc::int_from_bytes::<isize>(&b[5..]);
             lo += n;
             hi += n;
         }
     });
 
     String::from_utf8(out).unwrap()
-}
-
-fn int_from_bytes<T>(s: &[u8]) -> T
-where
-    T: From<i8> + std::ops::Mul<T, Output = T> + std::ops::Add<T, Output = T>,
-{
-    T::from((s[0] != b'-') as i8 * 2 - 1)
-        * s.iter().fold(T::from(0), |n, c| {
-            let r = match c {
-                b'0' => T::from(0),
-                b'1' => T::from(1),
-                b'2' => T::from(2),
-                b'3' => T::from(3),
-                b'4' => T::from(4),
-                b'5' => T::from(5),
-                b'6' => T::from(6),
-                b'7' => T::from(7),
-                b'8' => T::from(8),
-                b'9' => T::from(9),
-                _ => T::from(0),
-            };
-            n * T::from(10) + r
-        })
 }
 
 pub fn run_part1() {

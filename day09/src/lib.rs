@@ -18,7 +18,7 @@ pub fn part1(input: &str) -> u32 {
         let d0 = (b[0] == b'R') as i32 - (b[0] == b'L') as i32;
         let d1 = (b[0] == b'U') as i32 - (b[0] == b'D') as i32;
 
-        for _ in 0..int_from_bytes::<u8>(&b[2..]) {
+        for _ in 0..aoc::uint_from_bytes::<u8>(&b[2..]) {
             head = (head.0 + d0, head.1 + d1);
 
             let diff = move_points(head.0 - tail.0, head.1 - tail.1);
@@ -59,7 +59,7 @@ pub fn part2(input: &str) -> u32 {
         let d0 = (b[0] == b'R') as i32 - (b[0] == b'L') as i32;
         let d1 = (b[0] == b'U') as i32 - (b[0] == b'D') as i32;
 
-        'outer: for _ in 0..int_from_bytes::<u8>(&b[2..]) {
+        'outer: for _ in 0..aoc::uint_from_bytes::<u8>(&b[2..]) {
             points[0] = (points[0].0 + d0, points[0].1 + d1);
 
             for i in 1..points.len() {
@@ -79,28 +79,6 @@ pub fn part2(input: &str) -> u32 {
         }
     });
     seen.len() as u32
-}
-
-fn int_from_bytes<T>(s: &[u8]) -> T
-where
-    T: From<u8> + std::ops::Mul<T, Output = T> + std::ops::Add<T, Output = T>,
-{
-    s.iter().fold(T::from(0), |n, c| {
-        let r = match c {
-            b'0' => Some(T::from(0)),
-            b'1' => Some(T::from(1)),
-            b'2' => Some(T::from(2)),
-            b'3' => Some(T::from(3)),
-            b'4' => Some(T::from(4)),
-            b'5' => Some(T::from(5)),
-            b'6' => Some(T::from(6)),
-            b'7' => Some(T::from(7)),
-            b'8' => Some(T::from(8)),
-            b'9' => Some(T::from(9)),
-            _ => None,
-        };
-        n * T::from(10) + r.unwrap()
-    })
 }
 
 pub fn run_part1() {

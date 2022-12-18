@@ -83,8 +83,8 @@ fn compare(a: &[u8], b: &[u8]) -> Ordering {
             }
         }
 
-        let (na, alen) = int_from_bytes_prefix::<usize>(&a[ai..]);
-        let (nb, blen) = int_from_bytes_prefix::<usize>(&b[bi..]);
+        let (na, alen) = aoc::uint_from_bytes_prefix::<usize>(&a[ai..]);
+        let (nb, blen) = aoc::uint_from_bytes_prefix::<usize>(&b[bi..]);
         let r = na.cmp(&nb);
         if r != Ordering::Equal {
             return r;
@@ -109,31 +109,6 @@ fn compare(a: &[u8], b: &[u8]) -> Ordering {
             ad -= 1;
         }
     }
-}
-
-fn int_from_bytes_prefix<T>(s: &[u8]) -> (T, usize)
-where
-    T: From<u8> + std::ops::MulAssign + std::ops::AddAssign,
-{
-    let mut n = T::from(0);
-    for (i, &c) in s.iter().enumerate() {
-        let r = match c {
-            b'0' => 0,
-            b'1' => 1,
-            b'2' => 2,
-            b'3' => 3,
-            b'4' => 4,
-            b'5' => 5,
-            b'6' => 6,
-            b'7' => 7,
-            b'8' => 8,
-            b'9' => 9,
-            _ => return (n, i),
-        };
-        n *= T::from(10);
-        n += T::from(r);
-    }
-    (n, s.len())
 }
 
 pub fn run_part1() {

@@ -4,7 +4,7 @@ pub fn part1(input: &str) -> u32 {
     input
         .as_bytes()
         .split(|c| matches!(c, b'-' | b',' | b'\n'))
-        .map(int_from_bytes::<u8>)
+        .map(aoc::uint_from_bytes::<u8>)
         .array_chunks::<4>()
         .map(|[a1, b1, a2, b2]| (a1 <= a2 && b2 <= b1 || a2 <= a1 && b1 <= b2) as u32)
         .sum()
@@ -14,18 +14,10 @@ pub fn part2(input: &str) -> u32 {
     input
         .as_bytes()
         .split(|c| matches!(c, b'-' | b',' | b'\n'))
-        .map(int_from_bytes::<u8>)
+        .map(aoc::uint_from_bytes::<u8>)
         .array_chunks::<4>()
         .map(|[a1, b1, a2, b2]| (a1 <= b2 && a2 <= b1) as u32)
         .sum()
-}
-
-fn int_from_bytes<T>(s: &[u8]) -> T
-where
-    T: std::ops::Mul<T, Output = T> + std::ops::Add<T, Output = T> + From<u8>,
-{
-    s.iter()
-        .fold(T::from(0), |n, &c| n * T::from(10) + T::from(c - b'0'))
 }
 
 pub fn run_part1() {

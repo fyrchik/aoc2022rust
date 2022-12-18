@@ -26,7 +26,7 @@ pub fn part1(input: &str) -> u32 {
                 tree.len() - 1
             }
         } else if b[0] != b'$' && b[0] != b'd' {
-            let sz = int_from_bytes_prefix::<u32>(b);
+            let sz = aoc::uint_from_bytes::<u32>(b);
             tree[current].size += sz;
         }
     });
@@ -61,7 +61,7 @@ pub fn part2(input: &str) -> u32 {
                 tree.len() - 1
             }
         } else if b[0] != b'$' && b[0] != b'd' {
-            let sz = int_from_bytes_prefix::<u32>(b);
+            let sz = aoc::uint_from_bytes::<u32>(b);
             tree[current].size += sz;
         }
     });
@@ -85,31 +85,6 @@ pub fn part2(input: &str) -> u32 {
         .filter(|&size| min_remove <= size)
         .min()
         .unwrap_or(u32::MAX)
-}
-
-fn int_from_bytes_prefix<T>(s: &[u8]) -> T
-where
-    T: From<u8> + std::ops::MulAssign + std::ops::AddAssign,
-{
-    let mut n = T::from(0);
-    for &c in s {
-        let r = match c {
-            b'0' => 0,
-            b'1' => 1,
-            b'2' => 2,
-            b'3' => 3,
-            b'4' => 4,
-            b'5' => 5,
-            b'6' => 6,
-            b'7' => 7,
-            b'8' => 8,
-            b'9' => 9,
-            _ => return n,
-        };
-        n *= T::from(10);
-        n += T::from(r);
-    }
-    n
 }
 
 pub fn run_part1() {
