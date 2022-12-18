@@ -5,7 +5,7 @@ pub fn part1(input: &str) -> u32 {
     let mut seen = u16::MAX;
     for (i, v) in rates.iter().enumerate() {
         if *v != 0 {
-            seen = seen & !(1 << i);
+            seen &= !(1 << i);
         }
     }
 
@@ -14,27 +14,33 @@ pub fn part1(input: &str) -> u32 {
 }
 
 pub fn part2(input: &str) -> u32 {
-   let (dist, rates, start) = parse(input);
-   let mut seen = u16::MAX;
-   for (i, v) in rates.iter().enumerate() {
-       if *v != 0 {
-           seen = seen & !(1 << i);
-       }
-   }
+    let (dist, rates, start) = parse(input);
+    let mut seen = u16::MAX;
+    for (i, v) in rates.iter().enumerate() {
+        if *v != 0 {
+            seen &= !(1 << i);
+        }
+    }
 
-   let g = Graph { dist, rates };
-   let mut m = FxHashMap::<u16, u32>::default();
-   g.dfs_multi(seen, start, 0, 26, &mut m);
+    let g = Graph { dist, rates };
 
-   let mut max = 0;
-   for (kx, vx) in m.iter() {
-      for (ky, vy) in m.iter() {
-         if kx & ky & !seen == 0 {
-            max = max.max(vx + vy);
-         }
-      }
-   }
-   max
+    // We use 2 maps to store routes with and without one of the nodes.
+    // This allows us to find the maximum a 4 times faster (n^2 vs (n/2)^2).
+    // Here we assume that all nodes should be visited by the end of the time.
+    let mut m1 = FxHashMap::<u16, u32>::default();
+    let mut m2 = FxHashMap::<u16, u32>::default();
+    let mask = 1 << (start == 0) as usize;
+    g.dfs_multi(mask, seen, start, 0, 26, &mut m1, &mut m2);
+
+    let mut max = 0;
+    for (kx, vx) in m1.iter() {
+        for (ky, vy) in m2.iter() {
+            if kx & ky == seen {
+                max = max.max(vx + vy);
+            }
+        }
+    }
+    max
 }
 
 struct Graph {
@@ -53,15 +59,39 @@ impl Graph {
         max
     }
 
+    fn dfs_multi(
+        &self,
+        mask: u16,
+        seen: u16,
+        current: usize,
+        total: u32,
+        time: u32,
+        m1: &mut FxHashMap<u16, u32>,
+        m2: &mut FxHashMap<u16, u32>,
+    ) {
+        if seen & mask == mask {
+            m1.entry(seen)
+                .and_modify(|v| *v = total.max(*v))
+                .or_insert(total);
+        } else {
+            m2.entry(seen)
+                .and_modify(|v| *v = total.max(*v))
+                .or_insert(total);
+        }
 
-    fn dfs_multi(&self, seen: u16, current: usize, total: u32, time: u32, m: &mut FxHashMap<u16, u32>) {
-      m.entry(seen).and_modify(|v| *v = total.max(*v)).or_insert(total);
-
-      for i in (0..16).filter(move |&t| seen & (1 << t) == 0 && time > self.dist[current][t]) {
-          let time_left = time - self.dist[current][i] - 1;
-          self.dfs_multi(seen | (1 << i), i, total + self.rates[i] * time_left, time_left, m);
-      }
-   }
+        for i in (0..16).filter(move |&t| seen & (1 << t) == 0 && time > self.dist[current][t]) {
+            let time_left = time - self.dist[current][i] - 1;
+            self.dfs_multi(
+                mask,
+                seen | (1 << i),
+                i,
+                total + self.rates[i] * time_left,
+                time_left,
+                m1,
+                m2,
+            );
+        }
+    }
 }
 
 fn parse(input: &str) -> (Vec<Vec<u32>>, Vec<u32>, usize) {
@@ -99,7 +129,7 @@ fn parse(input: &str) -> (Vec<Vec<u32>>, Vec<u32>, usize) {
 
     let mut start = *names.get("AA".as_bytes()).unwrap();
 
-    let mut graph = vec![];
+    let mut graph = Vec::with_capacity(neighbours.len());
     for v in neighbours.iter() {
         let mut lst = vec![u32::MAX; neighbours.len()];
         for n in v.iter() {
