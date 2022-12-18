@@ -127,7 +127,21 @@ name = "day15"
 version = "0.1.0"
 
 [[package]]
+name = "day16"
+version = "0.1.0"
+dependencies = [
+ "rustc-hash",
+]
+
+[[package]]
 name = "day17"
+version = "0.1.0"
+dependencies = [
+ "rustc-hash",
+]
+
+[[package]]
+name = "day18"
 version = "0.1.0"
 dependencies = [
  "rustc-hash",
@@ -297,7 +311,9 @@ dependencies = [
  "day13",
  "day14",
  "day15",
+ "day16",
  "day17",
+ "day18",
  "rayon",
  "took",
 ]

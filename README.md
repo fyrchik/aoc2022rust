@@ -46,12 +46,14 @@ are close to those obtained (scientifically) with `cargo criterion`.
 | [day 13](https://adventofcode.com/2022/day/13)   | [` 0.026 ms`](./day13/src/lib.rs) | [` 0.029 ms`](./day13/src/lib.rs) |
 | [day 14](https://adventofcode.com/2022/day/14)   | [` 0.067 ms`](./day14/src/lib.rs) | [` 0.195 ms`](./day14/src/lib.rs) |
 | [day 15](https://adventofcode.com/2022/day/15)   | [` 0.005 ms`](./day15/src/lib.rs) | [` 0.006 ms`](./day15/src/lib.rs) |
+| [day 16](https://adventofcode.com/2022/day/16)   | [` 11.45 ms`](./day16/src/lib.rs) | [` 12.73 ms`](./day16/src/lib.rs) |
 | [day 17](https://adventofcode.com/2022/day/17)   | [` 0.164 ms`](./day17/src/lib.rs) | [` 0.520 ms`](./day17/src/lib.rs) |
+| [day 18](https://adventofcode.com/2022/day/18)   | [` 0.168 ms`](./day18/src/lib.rs) | [` 0.578 ms`](./day18/src/lib.rs) |
 
 
 |              | one-by-one (1 CPU core)                  | parallel                                     |
 |:-------------|:-----------------------------------------|:---------------------------------------------|
-| _everything_ | [`5.720 ms`](./runner/src/bin/runner.rs) | [`2.480 ms`](./runner/src/bin/runner-par.rs) |
+| _everything_ | [`32.080 ms`](./runner/src/bin/runner.rs) | [`22.510 ms`](./runner/src/bin/runner-par.rs) |
 
 ## Run all solutions
 
