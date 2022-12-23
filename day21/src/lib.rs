@@ -8,6 +8,8 @@ const ME: Name = [b'h', b'u', b'm', b'n'];
 
 pub fn part1(input: &str) -> i64 {
     let mut monkeys = FxHashMap::<Name, Monkey>::default();
+    monkeys.reserve(input.as_bytes().iter().filter(|c| **c == b'\n').count());
+
     input
         .trim_end()
         .as_bytes()
@@ -37,6 +39,8 @@ pub fn part1(input: &str) -> i64 {
 
 pub fn part2(input: &str) -> i64 {
     let mut monkeys = FxHashMap::<Name, PolyMonkey>::default();
+    monkeys.reserve(input.as_bytes().iter().filter(|c| **c == b'\n').count());
+
     input
         .trim_end()
         .as_bytes()
@@ -102,7 +106,7 @@ enum PolyMonkey {
 }
 
 fn dfs(monkeys: &mut FxHashMap<Name, Monkey>, name: Name) -> i64 {
-    return match *monkeys.get(&name).unwrap() {
+    match *monkeys.get(&name).unwrap() {
         Monkey::Yell(n) => n,
         Monkey::Calculate(op, a, b) => {
             let an = dfs(monkeys, a);
@@ -116,11 +120,11 @@ fn dfs(monkeys: &mut FxHashMap<Name, Monkey>, name: Name) -> i64 {
             monkeys.insert(name, Monkey::Yell(r));
             r
         }
-    };
+    }
 }
 
 fn dfs2(monkeys: &mut FxHashMap<Name, PolyMonkey>, name: Name) -> (Ratio<i64>, Ratio<i64>) {
-    return match *monkeys.get(&name).unwrap() {
+    match *monkeys.get(&name).unwrap() {
         PolyMonkey::M(m) => match m {
             Monkey::Yell(n) => (Ratio::zero(), Ratio::from(n)),
             Monkey::Calculate(op, a, b) => {
@@ -137,7 +141,7 @@ fn dfs2(monkeys: &mut FxHashMap<Name, PolyMonkey>, name: Name) -> (Ratio<i64>, R
             }
         },
         PolyMonkey::P(p) => p,
-    };
+    }
 }
 
 pub fn run_part1() {
