@@ -2,6 +2,7 @@
 
 pub fn part1(input: &str) -> u32 {
     input
+        .trim_end()
         .as_bytes()
         .split(|c| matches!(c, b'-' | b',' | b'\n'))
         .map(aoc::uint_from_bytes::<u8>)
@@ -12,6 +13,7 @@ pub fn part1(input: &str) -> u32 {
 
 pub fn part2(input: &str) -> u32 {
     input
+        .trim_end()
         .as_bytes()
         .split(|c| matches!(c, b'-' | b',' | b'\n'))
         .map(aoc::uint_from_bytes::<u8>)
