@@ -11,7 +11,7 @@ pub fn part1(input: &str) -> u32 {
             ro: robots,
             re: [0u32; 4],
         };
-        s.count_max_geodes_dfs(24);
+        s.count_max_geodes_dfs(24, [false; 4]);
         sum += (i as u32 + 1) * s.max;
     }
     sum
@@ -30,7 +30,7 @@ pub fn part2(input: &str) -> u32 {
             ro: robots,
             re: [0u32; 4],
         };
-        s.count_max_geodes_dfs(32);
+        s.count_max_geodes_dfs(32, [false; 4]);
         p *= s.max;
     }
     p
@@ -132,7 +132,7 @@ impl State {
         max_geodes == 0 || self.max >= max_geodes
     }
 
-    fn count_max_geodes_dfs(&mut self, time: u32) {
+    fn count_max_geodes_dfs(&mut self, time: u32, could_built: [bool; 4]) {
         if time == 0 {
             self.max = self.max.max(self.re[GEO]);
             return;
@@ -143,32 +143,39 @@ impl State {
             return;
         }
 
+        let can_build = [
+            could_built[ORE] || self.can_build::<ORE>(),
+            could_built[CLA] || self.can_build::<CLA>(),
+            could_built[OBS] || self.can_build::<OBS>(),
+            could_built[GEO] || self.can_build::<GEO>(),
+        ];
+
         let (ro, re) = (self.ro, self.re);
-        if self.can_build::<GEO>() {
+        if !could_built[GEO] && can_build[GEO] {
             self.build::<GEO>();
-            self.count_max_geodes_dfs(time - 1);
+            self.count_max_geodes_dfs(time - 1, [false; 4]);
             (self.ro, self.re) = (ro, re);
         }
         if time > 2 {
-            if self.can_build::<OBS>() && self.ro[OBS] < self.b.geode_obsidian {
+            if !could_built[OBS] && can_build[OBS] && self.ro[OBS] < self.b.geode_obsidian {
                 self.build::<OBS>();
-                self.count_max_geodes_dfs(time - 1);
+                self.count_max_geodes_dfs(time - 1, [false; 4]);
                 (self.ro, self.re) = (ro, re);
             }
-            if self.can_build::<CLA>() && self.ro[CLA] < self.b.obsidian_clay {
+            if !could_built[CLA] && can_build[CLA] && self.ro[CLA] < self.b.obsidian_clay {
                 self.build::<CLA>();
-                self.count_max_geodes_dfs(time - 1);
+                self.count_max_geodes_dfs(time - 1, [false; 4]);
                 (self.ro, self.re) = (ro, re);
             }
-            if self.can_build::<ORE>() && self.ro[ORE] < self.max_ore {
+            if !could_built[ORE] && can_build[ORE] && self.ro[ORE] < self.max_ore {
                 self.build::<ORE>();
-                self.count_max_geodes_dfs(time - 1);
+                self.count_max_geodes_dfs(time - 1, [false; 4]);
                 (self.ro, self.re) = (ro, re);
             }
         }
 
         self.mine();
-        self.count_max_geodes_dfs(time - 1);
+        self.count_max_geodes_dfs(time - 1, can_build);
     }
 }
 
