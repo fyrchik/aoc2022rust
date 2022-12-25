@@ -38,8 +38,8 @@ pub fn jobs() -> &'static [(fn(), &'static str)] {
         (day17::run_part2, "Day17, part 2"),
         (day18::run_part1, "Day18, part 1"),
         (day18::run_part2, "Day18, part 2"),
-        // (day19::run_part1, "Day19, part 1"),
-        // (day19::run_part2, "Day19, part 2"),
+        (day19::run_part1, "Day19, part 1"),
+        (day19::run_part2, "Day19, part 2"),
         (day20::run_part1, "Day20, part 1"),
         (day20::run_part2, "Day20, part 2"),
         (day21::run_part1, "Day21, part 1"),
@@ -50,6 +50,6 @@ pub fn jobs() -> &'static [(fn(), &'static str)] {
         (day23::run_part2, "Day23, part 2"),
         (day24::run_part1, "Day24, part 1"),
         (day24::run_part2, "Day24, part 2"),
-        // (day25::run_part1, "Day25, part 1"),
+        (day25::run_part1, "Day25, part 1"),
     ]
 }
