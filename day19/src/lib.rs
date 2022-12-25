@@ -50,11 +50,11 @@ struct State {
 }
 
 impl State {
-    fn build(&mut self, robot: usize) {
+    fn build<const R: usize>(&mut self) {
         self.mine();
 
-        self.ro[robot] += 1;
-        match robot {
+        self.ro[R] += 1;
+        match R {
             ORE => self.re[ORE] -= self.b.ore,
             CLA => self.re[ORE] -= self.b.clay,
             OBS => {
@@ -69,8 +69,9 @@ impl State {
         }
     }
 
-    fn can_build(&self, robot: usize) -> bool {
-        match robot {
+    #[inline]
+    fn can_build<const R: usize>(&self) -> bool {
+        match R {
             ORE => self.b.ore <= self.re[ORE],
             CLA => self.b.clay <= self.re[ORE],
             OBS => self.b.obsidian_ore <= self.re[ORE] && self.b.obsidian_clay <= self.re[CLA],
@@ -86,36 +87,81 @@ impl State {
         self.re[3] += self.ro[3];
     }
 
+    fn count_clay(&self, time: u32) -> u32 {
+        if time == 0 {
+            return self.re[CLA];
+        }
+        self.re[CLA]
+            + self.ro[CLA] * time
+            + if self.ro[CLA] + time < self.b.obsidian_clay {
+                time * (time - 1) / 2
+            } else {
+                let t = self.b.obsidian_clay - self.ro[CLA];
+                t * (t + 1) / 2 + (time - t) * self.b.obsidian_clay
+            }
+    }
+
+    fn count_obsidian(&self, time: u32) -> u32 {
+        if time == 0 {
+            return self.re[OBS];
+        }
+        let total_clay = self.count_clay(time - 1);
+        let max_obs_robots = total_clay / self.b.obsidian_clay;
+        self.re[OBS]
+            + self.ro[OBS] * time
+            + if time <= max_obs_robots {
+                (time - 1) * time / 2
+            } else {
+                max_obs_robots * ((max_obs_robots + 1) / 2 + time - max_obs_robots - 1)
+            }
+    }
+
+    fn count_geodes(&self, time: u32) -> u32 {
+        let total_obs = self.count_obsidian(time - 1);
+        let max_geo_robots = total_obs / self.b.geode_obsidian;
+        self.re[GEO]
+            + self.ro[GEO] * time
+            + if time <= max_geo_robots {
+                (time - 1) * time / 2
+            } else {
+                max_geo_robots * ((max_geo_robots + 1) / 2 + time - max_geo_robots - 1)
+            }
+    }
+
+    fn prune_branch(&self, max_geodes: u32) -> bool {
+        max_geodes == 0 || self.max >= max_geodes
+    }
+
     fn count_max_geodes_dfs(&mut self, time: u32) {
         if time == 0 {
             self.max = self.max.max(self.re[GEO]);
             return;
         }
 
-        let max_geodes = self.re[GEO] + self.ro[GEO] * time + time * (time - 1) / 2;
-        if max_geodes == 0 || self.max > max_geodes || self.max > 0 && self.max == max_geodes {
+        let max_geodes = self.count_geodes(time);
+        if self.prune_branch(max_geodes) {
             return;
         }
 
         let (ro, re) = (self.ro, self.re);
-        if self.can_build(GEO) {
-            self.build(GEO);
+        if self.can_build::<GEO>() {
+            self.build::<GEO>();
             self.count_max_geodes_dfs(time - 1);
             (self.ro, self.re) = (ro, re);
         }
-        if time > 1 {
-            if self.can_build(OBS) && self.ro[OBS] < self.b.geode_obsidian {
-                self.build(OBS);
+        if time > 2 {
+            if self.can_build::<OBS>() && self.ro[OBS] < self.b.geode_obsidian {
+                self.build::<OBS>();
                 self.count_max_geodes_dfs(time - 1);
                 (self.ro, self.re) = (ro, re);
             }
-            if self.can_build(CLA) && self.ro[CLA] < self.b.obsidian_clay {
-                self.build(CLA);
+            if self.can_build::<CLA>() && self.ro[CLA] < self.b.obsidian_clay {
+                self.build::<CLA>();
                 self.count_max_geodes_dfs(time - 1);
                 (self.ro, self.re) = (ro, re);
             }
-            if self.can_build(ORE) && self.ro[ORE] < self.max_ore {
-                self.build(ORE);
+            if self.can_build::<ORE>() && self.ro[ORE] < self.max_ore {
+                self.build::<ORE>();
                 self.count_max_geodes_dfs(time - 1);
                 (self.ro, self.re) = (ro, re);
             }
